@@ -67,3 +67,24 @@ button:hover {
     border: 1px solid #051c2c;
     padding: 10px;
 }
+
+#exportButton {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    padding: 10px;
+    background-color: #051c2c;
+    color: #fff;
+    border: none;
+    border-radius: 10px; /* Coins arrondis */
+    cursor: pointer;
+    margin: 0 5px; /* Espace entre les boutons */
+    border: 1px solid transparent;
+}
+
+#exportButton:hover {
+    background-color: #fff;
+    color: #051c2c;
+    border: 1px solid #051c2c;
+    padding: 10px;
+}
