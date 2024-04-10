@@ -80,7 +80,7 @@ button:first-of-type {
 .footer {
     position: fixed;
     left: 0;
-    bottom: 10px;
+    bottom: 10px; /* Ajustez cette valeur selon vos besoins */
     width: 100%;
     text-align: center;
 }
