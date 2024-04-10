@@ -11,8 +11,8 @@ server {
     server_name monsite.local;
 
     # Configurer les certificats SSL
-    ssl_certificate /etc/nginx/nginx-selfsigned.crt;
-    ssl_certificate_key /etc/nginx/private/nginx-selfsigned.key;
+    ssl_certificate /etc/nginx/server.crt;
+    ssl_certificate_key /etc/nginx/server.key;
 
     # Configurer des paramètres SSL forts
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -20,8 +20,6 @@ server {
     ssl_prefer_server_ciphers off;
     ssl_session_timeout 1d;
     ssl_session_cache shared:SSL:50m;
-    ssl_stapling on;
-    ssl_stapling_verify on;
     resolver 8.8.8.8;
 
     # Configurer des en-têtes de sécurité
@@ -41,9 +39,10 @@ server {
     # Configurer la sécurité du serveur HTTP
     server_tokens off;
     client_max_body_size 10M;
+    disable_symlinks off;
+    proxy_buffering off;
 
     # Configurer les journaux de manière sécurisée
     access_log /var/log/nginx/access.log;
     error_log /var/log/nginx/error.log;
-
 }
