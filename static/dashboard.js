@@ -23,27 +23,37 @@ function handleEntries(data) {
 }
 
 function createEntryListItem(entry) {
-    console.log('Creating entry item for ID:', entry.id);
-
     const entryItem = document.createElement('li');
     entryItem.className = 'entry-item';
     entryItem.style.display = 'flex';
+    entryItem.style.alignItems = 'center';
 
+    const nameField = createNameField(entry.name);
+    nameField.style.marginRight = '30px';
     const loginField = createLoginField(entry.login);
     const passwordField = createPasswordField(entry.password);
+
     const toggleButton = createToggleButton(passwordField);
-    
     const copyLoginButton = createCopyButton(loginField, 'Copier Login');
+    copyLoginButton.style.marginRight = '30px';
     const copyPasswordButton = createCopyButton(passwordField, 'Copier Mot de passe');
 
-    entryItem.appendChild(document.createTextNode(`Nom ${entry.name} `));
+    const nameText = document.createElement('strong');
+    nameText.appendChild(document.createTextNode('Nom'));
+    entryItem.appendChild(nameText);
     entryItem.appendChild(document.createTextNode('\u00A0')); // Ajout d'un espace insécable
-    entryItem.appendChild(document.createTextNode('| Login'));
+    entryItem.appendChild(nameField);
+
+    const loginText = document.createElement('strong');
+    loginText.appendChild(document.createTextNode('Login'));
+    entryItem.appendChild(loginText);
     entryItem.appendChild(document.createTextNode('\u00A0')); // Ajout d'un espace insécable
     entryItem.appendChild(loginField);
     entryItem.appendChild(copyLoginButton); // Ajoute le bouton de copie pour le login
-    entryItem.appendChild(document.createTextNode('\u00A0')); // Ajout d'un espace insécable
-    entryItem.appendChild(document.createTextNode('| Mot de passe'));
+
+    const passwordText = document.createElement('strong');
+    passwordText.appendChild(document.createTextNode('Mot de passe'));
+    entryItem.appendChild(passwordText);
     entryItem.appendChild(document.createTextNode('\u00A0')); // Ajout d'un espace insécable
     entryItem.appendChild(passwordField);
     entryItem.appendChild(toggleButton);
@@ -56,6 +66,15 @@ function createEntryListItem(entry) {
     return entryItem;
 }
 
+function createNameField(name) {
+    const nameField = document.createElement('input');
+    nameField.type = 'text';
+    nameField.className = 'name-field';
+    nameField.value = name;
+    nameField.readOnly = true;
+    return nameField;
+}
+
 function createLoginField(login) {
     const loginField = document.createElement('input');
     loginField.type = 'text'; // Utilisez le type 'text' pour rendre le login visible
@@ -63,6 +82,24 @@ function createLoginField(login) {
     loginField.value = login;
     loginField.readOnly = true;
     return loginField;
+}
+
+function createPasswordField(password) {
+    const passwordField = document.createElement('input');
+    passwordField.type = 'password';
+    passwordField.className = 'password-field';
+    passwordField.value = password;
+    passwordField.readOnly = true;
+    return passwordField;
+}
+
+function createToggleButton(passwordField) {
+    const toggleButton = document.createElement('button');
+    toggleButton.textContent = 'Afficher/Masquer Mot de passe';
+    toggleButton.addEventListener('click', function () {
+        passwordField.type = (passwordField.type === 'password') ? 'text' : 'password';
+    });
+    return toggleButton;
 }
 
 function createDeleteButton(entryId) {
@@ -81,25 +118,6 @@ function createDeleteButton(entryId) {
     });
 
     return deleteButton;
-}
-
-
-function createPasswordField(password) {
-    const passwordField = document.createElement('input');
-    passwordField.type = 'password';
-    passwordField.className = 'password-field';
-    passwordField.value = password;
-    passwordField.readOnly = true;
-    return passwordField;
-}
-
-function createToggleButton(passwordField) {
-    const toggleButton = document.createElement('button');
-    toggleButton.textContent = 'Afficher/Masquer Mot de passe';
-    toggleButton.addEventListener('click', function () {
-        passwordField.type = (passwordField.type === 'password') ? 'text' : 'password';
-    });
-    return toggleButton;
 }
 
 function saveEntry() {
@@ -175,7 +193,6 @@ function clearErrorMessage(fieldId) {
         errorContainer.innerText = '';
     }
 }
-
 
 function deleteEntry(entryId) {
     fetch(`/api/delete_entry/${entryId}`, {
@@ -260,7 +277,7 @@ function generateAndDisplayPasswords() {
     passwordList.appendChild(passwordItem);
 }
 
-// Ajoutez cette fonction pour créer un champ de texte
+// Ajoutez cette fonction pour créer un champ de texte mot de passe aléatoire
 function createTextField(password) {
     const textField = document.createElement('input');
     textField.type = 'text';
