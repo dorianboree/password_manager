@@ -175,7 +175,7 @@ def delete_entry(entry_id):
         db.session.delete(entry) 
         db.session.commit() 
         return jsonify({'message': 'Entrée supprimée avec succès !'})
-    else:
+    else: #Sinon
         return jsonify({'message': 'Entrée non trouvée ou non autorisée.'}), 404
 
 if __name__ == '__main__':
