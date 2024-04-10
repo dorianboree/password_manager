@@ -308,3 +308,29 @@ function createCopyButton(textField) {
 
     return copyButton;
 }
+
+function exportData() {
+    const entries = document.querySelectorAll('.entry-item');
+
+    let csvContent = 'Nom,Login,Mot de passe\n';
+
+    entries.forEach(entry => {
+        const name = entry.querySelector('.name-field').value;
+        const login = entry.querySelector('.login-field').value;
+        const password = entry.querySelector('.password-field').value;
+
+        csvContent += `${name},${login},${password}\n`;
+    });
+
+    const csvFile = new Blob([csvContent], { type: 'text/csv' });
+    const downloadLink = document.createElement('a');
+    downloadLink.download = 'password.csv';
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = 'none';
+
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+}
+
+document.getElementById('exportButton').addEventListener('click', exportData);
