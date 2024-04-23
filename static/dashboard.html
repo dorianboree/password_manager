@@ -13,10 +13,14 @@
 <body>
     <h1>Bienvenue sur votre tableau de bord !</h1>
 
-    <!-- Modify the saveResultMessage paragraph to include password instructions -->
+    <button id="exportButton">Exporter les données</button>
+
+    <div id="logoutContainer">
+        <button type="button" onclick="logout()">Déconnexion</button>
+    </div>
+
     <p id="saveResultMessage">Les mots de passe générés ci-dessous peuvent être utilisés ou vous pouvez entrer votre propre mot de passe.</p>
 
-    <!-- Add a new unordered list for displaying random passwords -->
     <ul id="passwordList"></ul>
     <div id="passwordButtonContainer">
         <label for="passwordLength">Longueur</label>
@@ -28,7 +32,6 @@
     	<button type="button" onclick="generateAndDisplayPasswords()">Générer un mot de passe</button>
     </div>
    
-    <!-- Formulaire pour enregistrer une entrée -->
     <form id="entryForm">
         <label for="entryName">Nom</label>
         <input type="text" id="entryName" name="entryName" required>
@@ -41,16 +44,27 @@
 
         <button type="button" onclick="saveEntry()">Enregistrer l'entrée</button>
     </form>
- 
+
+    <br>
+    <br>
+    <br>
+
+    <div id="searchContainer">
+        <label for="searchField">Rechercher :</label>
+        <input type="text" id="searchField">
+    </div>
+
+    <br>
+    <br>
+    <br>
+
     <div id="entriesListContainer">
     	<ul id="entriesList"></ul>
     </div>
 
-    <div id="logoutContainer">
-        <button type="button" onclick="logout()">Déconnexion</button>
+    <div class="footer">
+    	<a href="/static/test.exe" download>Télécharger la version logiciel</a>
     </div>
-
-    <button id="exportButton">Exporter les données</button>
 
     <script src="/static/main.js"></script>
     <script src="/static/dashboard.js"></script>
