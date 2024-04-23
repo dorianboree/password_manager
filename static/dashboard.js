@@ -1,8 +1,26 @@
 // static/dashboard.js
+
 document.addEventListener('DOMContentLoaded', function () {
-    // Appelle getEntries() lorsque la page est chargée
     getEntries();
     generateAndDisplayPasswords();
+});
+
+document.getElementById('exportButton').addEventListener('click', exportData);
+
+document.getElementById('searchField').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const entries = document.querySelectorAll('.entry-item');
+
+    entries.forEach(entry => {
+        const nameField = entry.querySelector('.name-field');
+        const name = nameField.value.toLowerCase();
+
+        if (name.includes(searchTerm)) {
+            entry.style.display = '';
+        } else {
+            entry.style.display = 'none';
+        }
+    });
 });
 
 function getEntries() {
@@ -41,25 +59,24 @@ function createEntryListItem(entry) {
     const nameText = document.createElement('strong');
     nameText.appendChild(document.createTextNode('Nom'));
     entryItem.appendChild(nameText);
-    entryItem.appendChild(document.createTextNode('\u00A0')); // Ajout d'un espace insécable
+    entryItem.appendChild(document.createTextNode('\u00A0'));
     entryItem.appendChild(nameField);
 
     const loginText = document.createElement('strong');
     loginText.appendChild(document.createTextNode('Login'));
     entryItem.appendChild(loginText);
-    entryItem.appendChild(document.createTextNode('\u00A0')); // Ajout d'un espace insécable
+    entryItem.appendChild(document.createTextNode('\u00A0'));
     entryItem.appendChild(loginField);
-    entryItem.appendChild(copyLoginButton); // Ajoute le bouton de copie pour le login
+    entryItem.appendChild(copyLoginButton);
 
     const passwordText = document.createElement('strong');
     passwordText.appendChild(document.createTextNode('Mot de passe'));
     entryItem.appendChild(passwordText);
-    entryItem.appendChild(document.createTextNode('\u00A0')); // Ajout d'un espace insécable
+    entryItem.appendChild(document.createTextNode('\u00A0'));
     entryItem.appendChild(passwordField);
     entryItem.appendChild(toggleButton);
-    entryItem.appendChild(copyPasswordButton); // Ajoute le bouton de copie pour le mot de passe
+    entryItem.appendChild(copyPasswordButton);
 
-    // Ajouter le bouton de suppression avec l'ID de l'entrée
     const deleteButton = createDeleteButton(entry.id);
     entryItem.appendChild(deleteButton);
 
@@ -77,7 +94,7 @@ function createNameField(name) {
 
 function createLoginField(login) {
     const loginField = document.createElement('input');
-    loginField.type = 'text'; // Utilisez le type 'text' pour rendre le login visible
+    loginField.type = 'text';
     loginField.className = 'login-field';
     loginField.value = login;
     loginField.readOnly = true;
@@ -106,13 +123,10 @@ function createDeleteButton(entryId) {
     const deleteButton = document.createElement('button');
     deleteButton.textContent = 'Supprimer';
 
-    // Ajoutez un gestionnaire d'événement pour le clic sur le bouton de suppression
     deleteButton.addEventListener('click', function () {
-        // Demande de confirmation avant la suppression
         const confirmed = confirm('Voulez-vous vraiment supprimer cette entrée?');
 
         if (confirmed) {
-            // Appel à la fonction de suppression avec l'ID de l'entrée
             deleteEntry(entryId);
         }
     });
@@ -121,12 +135,10 @@ function createDeleteButton(entryId) {
 }
 
 function saveEntry() {
-    // Récupérer les valeurs des champs
     const entryName = document.getElementById('entryName').value;
     const entryLogin = document.getElementById('entryLogin').value;
     const entryPassword = document.getElementById('entryPassword').value;
 
-    // Vérifier la longueur des champs et afficher les messages d'erreur à côté des champs correspondants
     if (entryName.length === 0 || entryName.length > 100) {
         displayErrorMessage('entryName', 'Le champ "Nom" doit être rempli et ne peut pas dépasser 100 caractères.');
         return;
@@ -148,7 +160,6 @@ function saveEntry() {
         clearErrorMessage('entryPassword');
     }
 
-    // Effectuer l'appel à l'API uniquement si les vérifications passent
     fetch('/api/save_entry', {
         method: 'POST',
         headers: {
@@ -158,27 +169,22 @@ function saveEntry() {
     })
     .then(response => response.json())
     .then(data => {
-        // Afficher le message de résultat
         document.getElementById('saveResultMessage').innerText = data.message;
 
-        // Mettre à jour la liste des entrées
         getEntries();
     });
 }
 
-// Fonction pour afficher un message d'erreur à côté d'un champ spécifique
 function displayErrorMessage(fieldId, errorMessage) {
     const errorContainer = document.getElementById(`${fieldId}Error`);
     if (errorContainer) {
         errorContainer.innerText = errorMessage;
     } else {
-        // Créer un élément span pour afficher le message d'erreur
         const errorSpan = document.createElement('span');
         errorSpan.id = `${fieldId}Error`;
-        errorSpan.className = 'error-message'; // Ajouter cette ligne pour une classe spécifique
+        errorSpan.className = 'error-message';
         errorSpan.innerText = errorMessage;
 
-        // Insérer le message d'erreur après le champ correspondant
         const field = document.getElementById(fieldId);
         if (field) {
             field.parentNode.insertBefore(errorSpan, field.nextSibling);
@@ -186,7 +192,6 @@ function displayErrorMessage(fieldId, errorMessage) {
     }
 }
 
-// Fonction pour effacer un message d'erreur à côté d'un champ spécifique
 function clearErrorMessage(fieldId) {
     const errorContainer = document.getElementById(`${fieldId}Error`);
     if (errorContainer) {
@@ -202,7 +207,7 @@ function deleteEntry(entryId) {
         .then(data => {
             const saveResultMessage = document.getElementById('saveResultMessage');
             saveResultMessage.textContent = data.message;
-            getEntries(); // Mettre à jour la liste après la suppression
+            getEntries();
         })
         .catch(error => console.error('Error deleting entry:', error));
 }
@@ -214,7 +219,6 @@ function logout() {
     .then(response => response.json())
     .then(data => {
         document.getElementById('saveResultMessage').innerText = data.message;
-        // Rediriger vers la page de connexion après la déconnexion
         window.location.href = '/';
     })
     .catch(error => {
@@ -260,15 +264,12 @@ function generateAndDisplayPasswords() {
     const passwordList = document.getElementById('passwordList');
     passwordList.innerHTML = '';
 
-    // Générer un seul mot de passe
     const randomPassword = generateRandomPassword();
 
     const passwordItem = document.createElement('li');
 
-    // Utilisez un champ de texte au lieu d'un champ de mot de passe
     const passwordField = createTextField(randomPassword);
 
-    // Ajoutez un bouton de copie pour le mot de passe
     const copyButton = createCopyButton(passwordField);
 
     passwordItem.appendChild(passwordField);
@@ -277,7 +278,6 @@ function generateAndDisplayPasswords() {
     passwordList.appendChild(passwordItem);
 }
 
-// Ajoutez cette fonction pour créer un champ de texte mot de passe aléatoire
 function createTextField(password) {
     const textField = document.createElement('input');
     textField.type = 'text';
@@ -292,17 +292,13 @@ function createCopyButton(textField) {
     copyButton.textContent = 'Copier';
 
     copyButton.addEventListener('click', function () {
-        // Sauvegarder le type du champ
         const fieldType = textField.type;
 
-        // Temporairement changer le type du champ à 'text'
         textField.type = 'text';
 
-        // Sélectionner et copier le texte
         textField.select();
         document.execCommand('copy');
 
-        // Rétablir le type du champ à son état initial
         textField.type = fieldType;
     });
 
@@ -332,5 +328,3 @@ function exportData() {
     downloadLink.click();
     document.body.removeChild(downloadLink);
 }
-
-document.getElementById('exportButton').addEventListener('click', exportData);
