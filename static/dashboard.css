@@ -22,6 +22,11 @@ body {
     margin-bottom: 50px;
 }
 
+#searchContainer {
+    position: absolute;
+    left: 300px;
+}
+
 #entryForm {
     text-align: center;
 }
@@ -30,17 +35,17 @@ body {
     display: flex;
     justify-content: center;
     overflow: auto;
-    max-height: 300px; /* Ajoutez une hauteur maximale pour activer la barre de défilement lorsque la liste devient trop longue */
+    max-height: 300px;
 }
 
 .entry-item {
-    list-style-type: none; /* Pour supprimer les puces de la liste */
-    padding: 10px; /* Ajustez l'espacement interne pour séparer les éléments */
-    border-bottom: 1px solid #ccc; /* Ajoutez une bordure inférieure pour séparer les entrées */
+    list-style-type: none;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
 }
 
 #entriesListContainer ul li:nth-child(odd) {
-    background-color: #f2f2f2; /* Couleur grise pour les éléments impairs */
+    background-color: #f2f2f2;
 }
 
 #logoutContainer {
@@ -49,15 +54,20 @@ body {
     right: 10px;
 }
 
-/* Style des boutons */
+#exportButton {
+    position: absolute;
+    top: 10px;
+    right: 150px;
+}
+
 button {
     padding: 10px;
     background-color: #051c2c;
     color: #fff;
     border: none;
-    border-radius: 10px; /* Coins arrondis */
+    border-radius: 10px;
     cursor: pointer;
-    margin: 0 5px; /* Espace entre les boutons */
+    margin: 0 5px;
     border: 1px solid transparent;
 }
 
@@ -68,24 +78,10 @@ button:hover {
     padding: 10px;
 }
 
-#exportButton {
+.footer {
     position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 10px;
-    background-color: #051c2c;
-    color: #fff;
-    border: none;
-    border-radius: 10px; /* Coins arrondis */
-    cursor: pointer;
-    margin: 0 5px; /* Espace entre les boutons */
-    border: 1px solid transparent;
-}
-
-#exportButton:hover {
-    background-color: #fff;
-    color: #051c2c;
-    border: 1px solid #051c2c;
-    padding: 10px;
+    left: 0;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
 }
