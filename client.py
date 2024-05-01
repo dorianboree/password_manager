@@ -4,7 +4,6 @@ from tkinter import messagebox, font
 import requests
 import pyperclip
 import webbrowser
-from tkinter import Tk, Canvas, PhotoImage
 
 entry_labels = [] 
 scrolling_frame = None 
