@@ -1,10 +1,19 @@
 # client.py
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, font
 import requests
 import pyperclip
+import webbrowser
+from tkinter import Tk, Canvas, PhotoImage
+
+entry_labels = [] 
+scrolling_frame = None 
+spacer = None 
 
 session = requests.Session()
+
+def open_webpage(event):
+    webbrowser.open('https://monsite.local/')
 
 def create_account(username, password):
     if not username or not password: 
@@ -57,31 +66,32 @@ def login_button_clicked():
 def toggle_password_connection():
     if password_entry.cget('show') == '': 
         password_entry.config(show='*')
-        toggle_button_password.config(text='Afficher le mot de passe')
+        toggle_button_password.config(text='Afficher le mot de passe', cursor="hand2")
     else:
         password_entry.config(show='') 
-        toggle_button_password.config(text='Cacher le mot de passe')
+        toggle_button_password.config(text='Cacher le mot de passe', cursor="hand2")
 
 def toggle_password_entry(entry_password_entry):
     if entry_password_entry.cget('show') == '':
         entry_password_entry.config(show='*') 
-        toggle_button_password.config(text='Afficher le mot de passe')
+        toggle_button_password.config(text='Afficher le mot de passe', cursor="hand2")
     else:
         entry_password_entry.config(show='') 
-        toggle_button_password.config(text='Cacher le mot de passe')
+        toggle_button_password.config(text='Cacher le mot de passe', cursor="hand2")
 
 def show_dashboard():
-    username_label.pack_forget() 
-    username_entry.pack_forget() 
-    password_label.pack_forget() 
-    password_entry.pack_forget() 
-    toggle_button_password.pack_forget()
-    login_button.pack_forget() 
-    create_account_button.pack_forget() 
+    username_label.place_forget() 
+    username_entry.place_forget() 
+    password_label.place_forget() 
+    password_entry.place_forget() 
+    toggle_button_password.place_forget()
+    login_button.place_forget() 
+    create_account_button.place_forget() 
     
     welcome_label.pack()
     logout_button.pack(side="top", anchor="ne")
     entry_button.pack() 
+
 
 def logout():
     global entry_labels
@@ -108,13 +118,13 @@ def logout():
     if scrolling_frame is not None:
         scrolling_frame.destroy()
 
-    username_label.pack() 
-    username_entry.pack()
-    password_label.pack()
-    password_entry.pack() 
-    toggle_button_password.pack() 
-    login_button.pack()
-    create_account_button.pack() 
+    username_label.place(relx=0.5, rely=0.3, anchor='center')
+    username_entry.place(relx=0.5, rely=0.35, anchor='center')
+    password_label.place(relx=0.5, rely=0.4, anchor='center')
+    password_entry.place(relx=0.5, rely=0.45, anchor='center')
+    toggle_button_password.place(relx=0.5, rely=0.5, anchor='center')
+    login_button.place(relx=0.5, rely=0.55, anchor='center')
+    create_account_button.place(relx=0.5, rely=0.6, anchor='center')
     
     welcome_label.pack_forget() 
     logout_button.pack_forget()
@@ -143,15 +153,11 @@ def make_toggle_password_func(entry_password_entry, button):
     def toggle_password():
         if entry_password_entry.cget('show') == '': 
             entry_password_entry.config(show='*') 
-            button.config(text='Afficher le mot de passe')
+            button.config(text='Afficher le mot de passe', cursor="hand2")
         else:
             entry_password_entry.config(show='') 
-            button.config(text='Cacher le mot de passe') 
+            button.config(text='Cacher le mot de passe', cursor="hand2") 
     return toggle_password
-
-entry_labels = [] 
-scrolling_frame = None 
-spacer = None 
 
 def show_entries():
     global entry_labels, scrolling_frame, spacer
@@ -181,36 +187,36 @@ def show_entries():
             entry_frame = tk.Frame(frame)
             entry_frame.pack(fill='x')
 
-            name_label = tk.Label(entry_frame, text="Nom :")
+            name_label = tk.Label(entry_frame, text="Nom")
             name_label.pack(side='left')
 
             name_var = tk.StringVar(value=entry['name'])
             name_entry = tk.Entry(entry_frame, textvariable=name_var, state='readonly')
             name_entry.pack(side='left')
 
-            login_label = tk.Label(entry_frame, text="Login :")
+            login_label = tk.Label(entry_frame, text="Login")
             login_label.pack(side='left')
             login_var = tk.StringVar(value=entry['login'])
             login_entry = tk.Entry(entry_frame, textvariable=login_var, state='readonly')
             login_entry.pack(side='left')
 
-            copy_login_button = tk.Button(entry_frame, text="Copier le login", command=make_copy_command(entry['login']))
+            copy_login_button = tk.Button(entry_frame, text="Copier le login", cursor="hand2", command=make_copy_command(entry['login']))
             copy_login_button.pack(side='left')
 
-            password_label = tk.Label(entry_frame, text="Mot de passe :")
+            password_label = tk.Label(entry_frame, text="Mot de passe")
             password_label.pack(side='left')
             password_var = tk.StringVar(value=entry['password'])
             password_entry = tk.Entry(entry_frame, textvariable=password_var, state='readonly', show='*')
             password_entry.pack(side='left')
 
             toggle_entry_password_button = tk.Button(entry_frame, text='Afficher le mot de passe')
-            toggle_entry_password_button.config(command=make_toggle_password_func(password_entry, toggle_entry_password_button))
+            toggle_entry_password_button.config(cursor="hand2", command=make_toggle_password_func(password_entry, toggle_entry_password_button))
             toggle_entry_password_button.pack(side='left')
 
-            copy_password_button = tk.Button(entry_frame, text="Copier le mot de passe", command=make_copy_command(entry['password']))
+            copy_password_button = tk.Button(entry_frame, text="Copier le mot de passe", cursor="hand2", command=make_copy_command(entry['password']))
             copy_password_button.pack(side='left')
 
-            delete_entry_button = tk.Button(entry_frame, text='Supprimer l\'entrée', command=make_delete_entry_func(entry['id'], entry_frame))
+            delete_entry_button = tk.Button(entry_frame, text='Supprimer l\'entrée', cursor="hand2", command=make_delete_entry_func(entry['id'], entry_frame))
             delete_entry_button.pack(side='left')
 
             entry_frame.pack(anchor='center')
@@ -226,16 +232,16 @@ def save_entry():
     entry_window = tk.Toplevel(root)
     entry_window.title("Nouvelle Entrée")
 
-    entry_name_label = tk.Label(entry_window, text="Nom de l'entrée :")
+    entry_name_label = tk.Label(entry_window, text="Nom de l'entrée")
     entry_name_entry = tk.Entry(entry_window)
-    entry_login_label = tk.Label(entry_window, text="Nom d'utilisateur :")
+    entry_login_label = tk.Label(entry_window, text="Nom d'utilisateur")
     entry_login_entry = tk.Entry(entry_window)
-    entry_password_label = tk.Label(entry_window, text="Mot de passe :")
+    entry_password_label = tk.Label(entry_window, text="Mot de passe")
     entry_password_entry = tk.Entry(entry_window, show='*')
 
-    toggle_button_password = tk.Button(entry_window, text='Afficher le mot de passe', width=20, command=lambda: toggle_password_entry(entry_password_entry))
+    toggle_button_password = tk.Button(entry_window, text='Afficher le mot de passe', width=20, cursor="hand2", command=lambda: toggle_password_entry(entry_password_entry))
 
-    save_button = tk.Button(entry_window, text="Enregistrer", command=lambda: save_entry_details(entry_name_entry.get(), entry_login_entry.get(), entry_password_entry.get(), entry_window))
+    save_button = tk.Button(entry_window, text="Enregistrer", cursor="hand2", command=lambda: save_entry_details(entry_name_entry.get(), entry_login_entry.get(), entry_password_entry.get(), entry_window))
 
     entry_name_label.grid(row=0, column=0, padx=10, pady=5)
     entry_name_entry.grid(row=0, column=1, padx=10, pady=5)
@@ -280,63 +286,50 @@ def make_delete_entry_func(entry_id, entry_frame):
     def delete_entry():
         server_url = f"https://monsite.local/api/delete_entry/{entry_id}"
         
-        try:
-            response = session.delete(server_url, verify=False) 
-            
-            if response.status_code == 200: 
-                messagebox.showinfo("Succès", "Entrée supprimée avec succès !") 
-                
-                entry_frame.destroy()
-            else:
-                messagebox.showerror("Erreur", "Échec de la suppression de l'entrée !")
-        except Exception as e:
-            messagebox.showerror("Erreur", f"Erreur de communication avec le serveur : {str(e)}")
+        if messagebox.askokcancel("Confirmation", "Êtes-vous sûr de vouloir supprimer cette entrée ?"):
+            try:
+                response = session.delete(server_url, verify=False) 
 
-    return delete_entry 
+                if response.status_code == 200: 
+                    messagebox.showinfo("Succès", "Entrée supprimée avec succès !") 
 
+                    entry_frame.destroy()
+                else:
+                    messagebox.showerror("Erreur", "Échec de la suppression de l'entrée !")
+            except Exception as e:
+                messagebox.showerror("Erreur", f"Erreur de communication avec le serveur : {str(e)}")
 
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-                                                                                # Création de la fenêtre principale
+    return delete_entry
+
 root = tk.Tk()
 root.title("Gestionnaire de mot de passe en ligne")
 
-# Définir la taille de la fenêtre
-window_width = 1000
-window_height = 500
-screen_width = root.winfo_screenwidth()
-screen_height = root.winfo_screenheight()
+root.state('zoomed')
 
-x = (screen_width - window_width) // 2
-y = (screen_height - window_height) // 2
+entry_font = font.Font(family='Helvetica', size=15, weight='bold')
 
-root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+username_label = tk.Label(root, text="Nom d'utilisateur", font=entry_font)
+username_entry = tk.Entry(root, font=entry_font)
+password_label = tk.Label(root, text="Mot de passe", font=entry_font)
+password_entry = tk.Entry(root, show='*', width=20, font=entry_font)
+toggle_button_password = tk.Button(root, text='Afficher le mot de passe', width=20, cursor="hand2", font=entry_font, command=toggle_password_connection)
+login_button = tk.Button(root, text="Connexion", cursor="hand2", font=entry_font, command=login_button_clicked)
+create_account_button = tk.Button(root, text="Créer un compte", cursor="hand2", font=entry_font, command=create_account_button_clicked)
 
-# Création des widgets
-username_label = tk.Label(root, text="Nom d'utilisateur :")
-password_label = tk.Label(root, text="Mot de passe :")
-username_entry = tk.Entry(root)
-password_entry = tk.Entry(root, show='*', width=20)
-toggle_button_password = tk.Button(root, text='Afficher le mot de passe', width=20, command=toggle_password_connection)
-login_button = tk.Button(root, text="Connexion", command=login_button_clicked)
-create_account_button = tk.Button(root, text="Créer un compte", command=create_account_button_clicked)
+username_label.place(relx=0.5, rely=0.3, anchor='center')
+username_entry.place(relx=0.5, rely=0.35, anchor='center')
+password_label.place(relx=0.5, rely=0.4, anchor='center')
+password_entry.place(relx=0.5, rely=0.45, anchor='center')
+toggle_button_password.place(relx=0.5, rely=0.5, anchor='center')
+login_button.place(relx=0.5, rely=0.55, anchor='center')
+create_account_button.place(relx=0.5, rely=0.6, anchor='center')
 
-# Utilisation de pack pour placer les widgets de la page de connexion et les centrer
-username_label.pack(pady=10)
-username_entry.pack(pady=10)
-password_label.pack(pady=10)
-password_entry.pack(pady=10)
-toggle_button_password.pack(pady=10)
-login_button.pack(pady=10)
-create_account_button.pack(pady=10)
+link_label = tk.Label(root, text="Essayer le site Web ?", fg="blue", cursor="hand2", font=entry_font)
+link_label.pack(side='bottom')
+link_label.bind("<Button-1>", open_webpage)
 
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-                                                                                # Création du tableau de bord
-
-# Création des widgets du tableau de bord
 welcome_label = tk.Label(root, text="Bienvenue dans le tableau de bord !")
 logout_button = tk.Button(root, text="Déconnexion", command=logout)
 entry_button = tk.Button(root, text="Ajouter une entrée", command=save_entry)
 
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-# Boucle principale de la fenêtre
 root.mainloop()
