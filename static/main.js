@@ -34,7 +34,29 @@ function performRequest(url, method, data, successMessage, errorMessage, redirec
     });
 }
 
-function createAccount() {
+function checkPassword(password) {
+    if (password.length < 8) {
+        return false;
+    }
+    if (!/\d/.test(password)) {
+        return false;
+    }
+    if (!/[A-Z]/.test(password)) {
+        return false;
+    }
+    if (!/[a-z]/.test(password)) {
+        return false;
+    }
+    var specialCharacters = "!@#$%^&*()-+?_=,<>/";
+    if (!new RegExp('[' + specialCharacters + ']').test(password)) {
+        return false;
+    }
+    return true;
+}
+
+function createAccount(event) {
+    event.preventDefault();
+
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
@@ -43,15 +65,17 @@ function createAccount() {
         return;
     }
 
-    if (password.length < 8) {
-        document.getElementById('resultMessage').innerText = 'Le mot de passe doit comporter au moins 8 caractères.';
+    if (!checkPassword(password)) {
+        document.getElementById('resultMessage').innerText = 'Le mot de passe doit comporter au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.';
         return;
     }
 
     performRequest('/api/create_account', 'POST', { username, password }, 'Compte créé avec succès !', 'Une erreur s\'est produite lors de la création du compte.');
 }
 
-function login() {
+function login(event) {
+    event.preventDefault();
+
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
@@ -60,8 +84,8 @@ function login() {
         return;
     }
 
-    if (password.length < 8) {
-        document.getElementById('resultMessage').innerText = 'Le mot de passe doit comporter au moins 8 caractères.';
+    if (!checkPassword(password)) {
+        document.getElementById('resultMessage').innerText = 'Le mot de passe doit comporter au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.';
         return;
     }
 
