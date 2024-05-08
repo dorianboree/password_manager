@@ -10,7 +10,7 @@ import csv
 session = requests.Session()
 
 def open_webpage(event):
-    webbrowser.open('https://monsite.local/')  # Remplacez par l'URL de votre site web
+    webbrowser.open('https://monsite.local/')
 
 def check_password(password):
     if len(password) < 8:
@@ -337,17 +337,13 @@ def export_to_csv():
 
     messagebox.showinfo("Succès", "Les entrées ont été exportées avec succès dans le fichier '{}'.".format(filename))
 
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-                                                                                # Création de la fenêtre principale
 root = tk.Tk()
 root.title("Gestionnaire de mot de passe en ligne")
 
 root.state('zoomed')
 
-#police
 police_font = font.Font(family='Helvetica', size=15, weight='bold')
 
-# Création des widgets
 username_label = tk.Label(root, text="Nom d'utilisateur", font=police_font)
 username_entry = tk.Entry(root, font=police_font)
 password_label = tk.Label(root, text="Mot de passe", font=police_font)
@@ -356,7 +352,6 @@ toggle_button_password = tk.Button(root, text='Afficher le mot de passe', width=
 create_account_button = tk.Button(root, text="Créer un compte", width=20, cursor="hand2", font=police_font, command=create_account_button_clicked)
 login_button = tk.Button(root, text="Connexion", width=20, cursor="hand2", font=police_font, command=login_button_clicked)
 
-# Utilisation de place pour placer les widgets de la page de connexion au centre
 username_label.place(relx=0.5, rely=0.3, anchor='center')
 username_entry.place(relx=0.5, rely=0.35, anchor='center')
 password_label.place(relx=0.5, rely=0.4, anchor='center')
@@ -365,19 +360,13 @@ toggle_button_password.place(relx=0.5, rely=0.5, anchor='center')
 create_account_button.place(relx=0.5, rely=0.6, anchor='center')
 login_button.place(relx=0.5, rely=0.55, anchor='center')
 
-# Création du label avec le lien
 link_label = tk.Label(root, text="Essayer le site Web ?", fg="blue", cursor="hand2", font=police_font)
 link_label.pack(side='bottom')
 link_label.bind("<Button-1>", open_webpage)
 
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-                                                                                # Création du tableau de bord
-# Création des widgets du tableau de bord
 welcome_label = tk.Label(root, text="Bienvenue dans le tableau de bord !")
 entry_button = tk.Button(root, text="Ajouter une entrée", cursor="hand2", command=save_entry)
 logout_button = tk.Button(root, text="Déconnexion", cursor="hand2", command=logout)
 export_button = tk.Button(root, text="Exporter les données", cursor="hand2", command=export_to_csv)
 
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
-# Boucle principale de la fenêtre
 root.mainloop()
