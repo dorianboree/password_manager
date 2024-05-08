@@ -75,6 +75,20 @@ with app.app_context():
 def index():
     return send_from_directory(static_directory, 'index.html') 
 
+def check_password(password):
+    if len(password) < 8:
+        return False
+    if not any(char.isdigit() for char in password):
+        return False
+    if not any(char.isupper() for char in password):
+        return False
+    if not any(char.islower() for char in password):
+        return False
+    special_characters = "!@#$%^&*()-+?_=,<>/"
+    if not any(char in special_characters for char in password):
+        return False
+    return True
+
 @app.route('/api/create_account', methods=['POST']) 
 def create_account():
     data = request.get_json()
@@ -91,10 +105,16 @@ def create_account():
 
     if user: 
         return jsonify({'message': 'Ce nom d\'utilisateur existe déjà. Veuillez en choisir un autre.'}), 400 
+    
+    if len(username) < 8:
+        return jsonify({'message': 'Le nom d\'utilisateur doit comporter au moins 8 caractères.'}), 400
 
     if not password: 
-        return jsonify({'message': 'Veuillez entrer un mot de passe.'}), 400 
-
+        return jsonify({'message': 'Veuillez entrer un mot de passe.'}), 400
+    
+    if not check_password(password):
+        return jsonify({'message': 'Le mot de passe doit comporter au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.'}), 400
+    
     try: 
         new_user = User(username=username, password=password) 
         db.session.add(new_user) 
@@ -118,10 +138,16 @@ def login():
             user = u
             break
 
+    if len(username) < 8:
+        return jsonify({'message': 'Le nom d\'utilisateur doit comporter au moins 8 caractères.'}), 400
+    
+    if not check_password(password):
+        return jsonify({'message': 'Le mot de passe doit comporter au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.'}), 400
+
     if user and user.check_password(password): 
         session['user_id'] = user.id  
         return jsonify({'message': 'Connexion réussie !'})
-    else: #Sinon
+    else:
         return jsonify({'message': 'Nom d\'utilisateur ou mot de passe incorrect.'}), 401
 
 @app.route('/dashboard') 
@@ -175,7 +201,7 @@ def delete_entry(entry_id):
         db.session.delete(entry) 
         db.session.commit() 
         return jsonify({'message': 'Entrée supprimée avec succès !'})
-    else: #Sinon
+    else:
         return jsonify({'message': 'Entrée non trouvée ou non autorisée.'}), 404
 
 if __name__ == '__main__':
