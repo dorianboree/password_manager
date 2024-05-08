@@ -1,79 +1,16 @@
-# server.py
+# client.py
 
-import os
-from flask import Flask, request, jsonify, send_from_directory, render_template, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError
-from flask_bcrypt import Bcrypt
-from cryptography.fernet import Fernet
+import tkinter as tk
+from tkinter import messagebox, font, filedialog
+import requests
+import pyperclip
+import webbrowser
+import csv
 
-app = Flask(__name__) 
-bcrypt = Bcrypt(app) 
-app.secret_key = 'your_secret_key' 
-static_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static') 
+session = requests.Session()
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///passwords.db'
-db = SQLAlchemy(app) 
-
-class User(db.Model): 
-    id = db.Column(db.Integer, primary_key=True) 
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(80), nullable=False) 
-
-    def __init__(self, username, password): 
-        self.username = bcrypt.generate_password_hash(username).decode('utf-8') 
-        self.password = bcrypt.generate_password_hash(password).decode('utf-8') 
-
-    def check_username(self, username): 
-        return bcrypt.check_password_hash(self.username, username)
-
-    def check_password(self, password): 
-        return bcrypt.check_password_hash(self.password, password)
-
-def load_or_generate_key():
-    key_file_path = "secret.key"
-
-    if os.path.exists(key_file_path):
-        with open(key_file_path, "rb") as key_file:
-            key = key_file.read()
-    else:
-        key = Fernet.generate_key()
-        with open(key_file_path, "wb") as key_file:
-            key_file.write(key)
-    
-    return key
-
-class Entry(db.Model): 
-    id = db.Column(db.Integer, primary_key=True) 
-    name = db.Column(db.String(100), nullable=False) 
-    login = db.Column(db.String(100), nullable=False)
-    password = db.Column(db.String(100), nullable=False) 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) 
-
-    def __init__(self, name, login, password, user_id): 
-        self.name = self.encrypt_data(name)
-        self.login = self.encrypt_data(login)
-        self.password = self.encrypt_data(password) 
-        self.user_id = user_id
-
-    def encrypt_data(self, data):
-        key = load_or_generate_key()
-        cipher_suite = Fernet(key)
-        ciphered_text = cipher_suite.encrypt(data.encode())
-        return ciphered_text.decode()
-
-    def decrypt_data(self, data):
-        key = load_or_generate_key()
-        cipher_suite = Fernet(key)
-        unciphered_text = (cipher_suite.decrypt(data.encode()))
-        return unciphered_text.decode()
-
-with app.app_context(): 
-    db.create_all() 
-
-@app.route('/') 
-def index():
-    return send_from_directory(static_directory, 'index.html') 
+def open_webpage(event):
+    webbrowser.open('https://monsite.local/')  # Remplacez par l'URL de votre site web
 
 def check_password(password):
     if len(password) < 8:
@@ -89,120 +26,358 @@ def check_password(password):
         return False
     return True
 
-@app.route('/api/create_account', methods=['POST']) 
-def create_account():
-    data = request.get_json()
-    username = data.get('username') 
-    password = data.get('password') 
-
-    users = User.query.all()
-    user = None
-
-    for u in users:
-        if u.check_username(username):
-            user = u
-            break
-
-    if user: 
-        return jsonify({'message': 'Ce nom d\'utilisateur existe déjà. Veuillez en choisir un autre.'}), 400 
-    
+def create_account(username, password):
     if len(username) < 8:
-        return jsonify({'message': 'Le nom d\'utilisateur doit comporter au moins 8 caractères.'}), 400
-
-    if not password: 
-        return jsonify({'message': 'Veuillez entrer un mot de passe.'}), 400
-    
+        messagebox.showerror("Erreur", "Le nom d'utilisateur doit contenir au moins 8 caractères.")
+        return
     if not check_password(password):
-        return jsonify({'message': 'Le mot de passe doit comporter au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.'}), 400
+        messagebox.showerror("Erreur", "Le mot de passe doit contenir au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.")
+        return
+
+    server_url = "https://monsite.local/api/create_account"
     
-    try: 
-        new_user = User(username=username, password=password) 
-        db.session.add(new_user) 
-        db.session.commit() 
-        return jsonify({'message': 'Compte créé avec succès !'}) 
-    except IntegrityError:
-        db.session.rollback() 
-        return jsonify({'message': 'Erreur lors de la création du compte. Veuillez réessayer.'}), 500
+    data = {'username': username, 'password': password} 
+    
+    try:
+        response = session.post(server_url, json=data, verify=False)
+        
+        if response.status_code == 200:
+            messagebox.showinfo("Succès", "Compte créé avec succès !") 
+        elif response.status_code == 400:
+            error_message = response.json().get('message', 'Erreur de création de compte.')
+            messagebox.showerror("Erreur", error_message)
+        else:
+            messagebox.showerror("Erreur", "Échec de la création de compte !") 
+    except Exception as e:
+        messagebox.showerror("Erreur", f"Erreur de création de compte : {str(e)}") 
 
-@app.route('/api/login', methods=['POST'])
-def login():
-    data = request.get_json() 
-    username = data.get('username') 
-    password = data.get('password') 
+def create_account_button_clicked():
+    create_account(username_entry.get(), password_entry.get())
 
-    users = User.query.all()
-    user = None
-
-    for u in users:
-        if u.check_username(username):
-            user = u
-            break
-
+def login(username, password):
     if len(username) < 8:
-        return jsonify({'message': 'Le nom d\'utilisateur doit comporter au moins 8 caractères.'}), 400
-    
+        messagebox.showerror("Erreur", "Le nom d'utilisateur doit contenir au moins 8 caractères.")
+        return
     if not check_password(password):
-        return jsonify({'message': 'Le mot de passe doit comporter au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.'}), 400
+        messagebox.showerror("Erreur", "Le mot de passe doit contenir au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.")
+        return
+    
+    server_url = "https://monsite.local/api/login" 
+    
+    data = {'username': username, 'password': password} 
+    
+    try:
+        response = session.post(server_url, json=data, verify=False)
+        
+        if response.status_code == 200: 
+            show_dashboard()
+            show_entries() 
+        else:
+            messagebox.showerror("Erreur", "Échec de la connexion !")
+    except Exception as e:
+        messagebox.showerror("Erreur", f"Erreur de connexion : {str(e)}") 
 
-    if user and user.check_password(password): 
-        session['user_id'] = user.id  
-        return jsonify({'message': 'Connexion réussie !'})
+def login_button_clicked():
+    login(username_entry.get(), password_entry.get())
+
+def toggle_password_connection():
+    if password_entry.cget('show') == '': 
+        password_entry.config(show='*')
+        toggle_button_password.config(text='Afficher le mot de passe', cursor="hand2")
     else:
-        return jsonify({'message': 'Nom d\'utilisateur ou mot de passe incorrect.'}), 401
+        password_entry.config(show='') 
+        toggle_button_password.config(text='Cacher le mot de passe', cursor="hand2")
 
-@app.route('/dashboard') 
-def dashboard():
-    return render_template('dashboard.html')
+def toggle_password_entry(entry_password_entry):
+    if entry_password_entry.cget('show') == '':
+        entry_password_entry.config(show='*') 
+        toggle_button_password.config(text='Afficher le mot de passe', cursor="hand2")
+    else:
+        entry_password_entry.config(show='') 
+        toggle_button_password.config(text='Cacher le mot de passe', cursor="hand2")
 
-@app.route('/api/logout', methods=['POST'])
+def show_dashboard():
+    username_label.place_forget() 
+    username_entry.place_forget() 
+    password_label.place_forget() 
+    password_entry.place_forget() 
+    toggle_button_password.place_forget()
+    create_account_button.place_forget() 
+    login_button.place_forget() 
+    
+    welcome_label.pack()
+    entry_button.pack()
+    logout_button.pack(side="top", anchor="ne")
+    export_button.pack(side="top", anchor="ne")
+    logout_button.place(relx=1, rely=0, anchor="ne")
+    export_button.place(relx=0.99, rely=0, x=-logout_button.winfo_reqwidth(), anchor="ne")
+
+
 def logout():
-    session.pop('user_id', None) 
-    return jsonify({'message': 'Déconnexion réussie !'}) 
+    global entry_labels
+    global scrolling_frame 
 
-@app.route('/api/save_entry', methods=['POST'])
-def save_entry():
-    data = request.get_json() 
-    entry_name = data.get('entryName') 
-    entry_login = data.get('entryLogin') 
-    entry_password = data.get('entryPassword') 
+    server_url = "https://monsite.local/api/logout" 
+    
+    try:
+        response = session.post(server_url, verify=False)
+        if response.status_code == 200:
+            messagebox.showinfo("Succès", "Déconnexion réussie !") 
+        else:
+            messagebox.showerror("Erreur", "Échec de la déconnexion !") 
+    except Exception as e:
+        messagebox.showerror("Erreur", f"Erreur de communication avec le serveur : {str(e)}") 
 
-    user_id = session.get('user_id') 
+    username_entry.delete(0, tk.END) 
+    password_entry.delete(0, tk.END) 
 
-    if user_id is None: 
-        return jsonify({'message': 'Utilisateur non connecté.'}), 401 
+    for label in entry_labels:
+        label.destroy()
+    entry_labels = []
 
-    new_entry = Entry(name=entry_name, login=entry_login, password=entry_password, user_id=user_id) 
-    db.session.add(new_entry) 
-    db.session.commit()
+    if scrolling_frame is not None:
+        scrolling_frame.destroy()
 
-    return jsonify({'message': 'Entrée enregistrée avec succès !'}) 
+    username_label.place(relx=0.5, rely=0.3, anchor='center')
+    username_entry.place(relx=0.5, rely=0.35, anchor='center')
+    password_label.place(relx=0.5, rely=0.4, anchor='center')
+    password_entry.place(relx=0.5, rely=0.45, anchor='center')
+    toggle_button_password.place(relx=0.5, rely=0.5, anchor='center')
+    create_account_button.place(relx=0.5, rely=0.6, anchor='center')
+    login_button.place(relx=0.5, rely=0.55, anchor='center')
+    
+    welcome_label.pack_forget() 
+    logout_button.pack_forget()
+    entry_button.pack_forget()
+    export_button.pack_forget()
+    logout_button.place_forget()
+    export_button.place_forget()
 
-@app.route('/api/get_entries', methods=['GET'])
 def get_entries():
-    user_id = session.get('user_id') 
+    server_url = "https://monsite.local/api/get_entries" 
 
-    if user_id is None:
-        return jsonify({'entries': []}) 
+    try:
+        response = session.get(server_url, verify=False) 
+        if response.status_code == 200:
+            entries_data = response.json().get('entries', [])
+            return entries_data 
+        else:
+            messagebox.showerror("Erreur", "Échec de récupération des entrées du serveur!")
+            return []
+    except Exception as e:
+        messagebox.showerror("Erreur", f"Erreur de communication avec le serveur: {str(e)}")
+        return [] 
 
-    entries = Entry.query.filter_by(user_id=user_id).all() 
-    entries_list = [{'id': entry.id, 'name': entry.decrypt_data(entry.name), 'login': entry.decrypt_data(entry.login), 'password': entry.decrypt_data(entry.password)} for entry in entries] 
-    return jsonify({'entries': entries_list}) 
+def make_copy_command(text):
+    return lambda: pyperclip.copy(text) 
 
-@app.route('/api/delete_entry/<int:entry_id>', methods=['DELETE'])
-def delete_entry(entry_id):
-    user_id = session.get('user_id') 
+def make_toggle_password_func(entry_password_entry, button):
+    def toggle_password():
+        if entry_password_entry.cget('show') == '': 
+            entry_password_entry.config(show='*') 
+            button.config(text='Afficher le mot de passe',cursor="hand2")
+        else:
+            entry_password_entry.config(show='') 
+            button.config(text='Cacher le mot de passe', cursor="hand2") 
+    return toggle_password
 
-    if user_id is None: 
-        return jsonify({'message': 'Utilisateur non connecté.'}), 401 
+entry_labels = [] 
+scrolling_frame = None 
 
-    entry = Entry.query.filter_by(id=entry_id, user_id=user_id).first() 
+def show_entries():
+    global entry_labels, scrolling_frame
+    entries_data = get_entries()
+    entry_font = font.Font(family='Helvetica', size=10, weight='bold')
 
-    if entry: 
-        db.session.delete(entry) 
-        db.session.commit() 
-        return jsonify({'message': 'Entrée supprimée avec succès !'})
+    if entries_data:
+        scrolling_frame = tk.Frame(root)
+        scrolling_frame.pack(side='bottom')
+
+        canvas = tk.Canvas(scrolling_frame, width=1100, height=600)
+        scrollbar = tk.Scrollbar(scrolling_frame, command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
+
+        frame = tk.Frame(canvas)
+        canvas.create_window((0, 0), window=frame, anchor='n')
+
+        for entry in entries_data:
+            entry_frame = tk.Frame(frame)
+            entry_frame.pack(fill='x', pady=10)
+
+            name_label = tk.Label(entry_frame, text="Nom", font=entry_font)
+            name_label.pack(side='left', padx=(20, 0))
+            name_var = tk.StringVar(value=entry['name'])
+            name_entry = tk.Entry(entry_frame, textvariable=name_var, state='readonly')
+            name_entry.pack(side='left')
+
+            login_label = tk.Label(entry_frame, text="Login", font=entry_font)
+            login_label.pack(side='left', padx=(20, 0))
+            login_var = tk.StringVar(value=entry['login'])
+            login_entry = tk.Entry(entry_frame, textvariable=login_var, state='readonly')
+            login_entry.pack(side='left')
+
+            copy_login_button = tk.Button(entry_frame, text="Copier le login", cursor="hand2", command=make_copy_command(entry['login']))
+            copy_login_button.pack(side='left')
+
+            password_label = tk.Label(entry_frame, text="Mot de passe", font=entry_font)
+            password_label.pack(side='left', padx=(20, 0))
+            password_var = tk.StringVar(value=entry['password'])
+            password_entry = tk.Entry(entry_frame, textvariable=password_var, state='readonly', show='*')
+            password_entry.pack(side='left')
+
+            toggle_entry_password_button = tk.Button(entry_frame, text='Afficher le mot de passe')
+            toggle_entry_password_button.config(cursor="hand2", command=make_toggle_password_func(password_entry, toggle_entry_password_button))
+            toggle_entry_password_button.pack(side='left')
+
+            copy_password_button = tk.Button(entry_frame, text="Copier le mot de passe", cursor="hand2", command=make_copy_command(entry['password']))
+            copy_password_button.pack(side='left')
+
+            delete_entry_button = tk.Button(entry_frame, text='Supprimer l\'entrée', cursor="hand2", command=make_delete_entry_func(entry['id'], entry_frame))
+            delete_entry_button.pack(side='left')
+
+            entry_frame.pack(anchor='center')
+
+            entry_labels.append(entry_frame)
+
+        frame.update_idletasks()
+        canvas.config(scrollregion=canvas.bbox('all'))
     else:
-        return jsonify({'message': 'Entrée non trouvée ou non autorisée.'}), 404
+        messagebox.showinfo("Information", "Aucune entrée disponible.")
 
-if __name__ == '__main__':
-    app.run(host='192.168.1.97', port=5000, debug=True)
+def save_entry():
+    entry_window = tk.Toplevel(root)
+    entry_window.title("Nouvelle Entrée")
+
+    entry_name_label = tk.Label(entry_window, text="Nom de l'entrée")
+    entry_name_entry = tk.Entry(entry_window)
+    entry_login_label = tk.Label(entry_window, text="Nom d'utilisateur")
+    entry_login_entry = tk.Entry(entry_window)
+    entry_password_label = tk.Label(entry_window, text="Mot de passe")
+    entry_password_entry = tk.Entry(entry_window, show='*')
+
+    toggle_button_password = tk.Button(entry_window, text='Afficher le mot de passe', width=20, cursor="hand2", command=lambda: toggle_password_entry(entry_password_entry))
+
+    save_button = tk.Button(entry_window, text="Enregistrer", width=20,cursor="hand2", command=lambda: save_entry_details(entry_name_entry.get(), entry_login_entry.get(), entry_password_entry.get(), entry_window))
+
+    entry_name_label.grid(row=0, column=0, padx=10, pady=5)
+    entry_name_entry.grid(row=0, column=1, padx=10, pady=5)
+    entry_login_label.grid(row=1, column=0, padx=10, pady=5)
+    entry_login_entry.grid(row=1, column=1, padx=10, pady=5)
+    entry_password_label.grid(row=2, column=0, padx=10, pady=5)
+    entry_password_entry.grid(row=2, column=1, padx=10, pady=5)
+    toggle_button_password.grid(row=3, column=0, columnspan=2, pady=10)
+    save_button.grid(row=4, column=0, columnspan=2, pady=10)
+
+def save_entry_details(entry_name, entry_login, entry_password, entry_window):
+    if not entry_name or not entry_login or not entry_password:
+        messagebox.showerror("Erreur", "Veuillez remplir tous les champs de l'entrée.")
+        return
+
+    server_url = "https://monsite.local/api/save_entry"
+
+    data = {'entryName': entry_name, 'entryLogin': entry_login, 'entryPassword': entry_password}
+    
+    try:
+        response = session.post(server_url, json=data, verify=False) 
+        
+        if response.status_code == 200: 
+            messagebox.showinfo("Succès", "Entrée enregistrée avec succès !")
+            
+            entry_window.destroy()
+
+            for entry_label in entry_labels:
+                entry_label.destroy()
+            entry_labels.clear()
+
+            if scrolling_frame is not None: 
+                scrolling_frame.destroy()
+
+            show_entries() 
+        else:
+            messagebox.showerror("Erreur", "Échec de l'enregistrement de l'entrée !")
+    except Exception as e:
+        messagebox.showerror("Erreur", f"Erreur de communication avec le serveur : {str(e)}") 
+
+def make_delete_entry_func(entry_id, entry_frame):
+    def delete_entry():
+        server_url = f"https://monsite.local/api/delete_entry/{entry_id}"
+        
+        if messagebox.askokcancel("Confirmation", "Êtes-vous sûr de vouloir supprimer cette entrée ?"):
+            try:
+                response = session.delete(server_url, verify=False) 
+
+                if response.status_code == 200: 
+                    messagebox.showinfo("Succès", "Entrée supprimée avec succès !") 
+
+                    entry_frame.destroy()
+                else:
+                    messagebox.showerror("Erreur", "Échec de la suppression de l'entrée !")
+            except Exception as e:
+                messagebox.showerror("Erreur", f"Erreur de communication avec le serveur : {str(e)}")
+
+    return delete_entry
+
+def export_to_csv():
+    entries = get_entries()
+    filename = filedialog.asksaveasfilename(defaultextension='.csv')
+
+    if not filename:
+        return
+
+    with open(filename, 'w', newline='') as csvfile:
+        fieldnames = entries[0].keys()
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for entry in entries:
+            writer.writerow(entry)
+
+    messagebox.showinfo("Succès", "Les entrées ont été exportées avec succès dans le fichier '{}'.".format(filename))
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+                                                                                # Création de la fenêtre principale
+root = tk.Tk()
+root.title("Gestionnaire de mot de passe en ligne")
+
+root.state('zoomed')
+
+#police
+police_font = font.Font(family='Helvetica', size=15, weight='bold')
+
+# Création des widgets
+username_label = tk.Label(root, text="Nom d'utilisateur", font=police_font)
+username_entry = tk.Entry(root, font=police_font)
+password_label = tk.Label(root, text="Mot de passe", font=police_font)
+password_entry = tk.Entry(root, show='*', width=20, font=police_font)
+toggle_button_password = tk.Button(root, text='Afficher le mot de passe', width=20, cursor="hand2", font=police_font, command=toggle_password_connection)
+create_account_button = tk.Button(root, text="Créer un compte", width=20, cursor="hand2", font=police_font, command=create_account_button_clicked)
+login_button = tk.Button(root, text="Connexion", width=20, cursor="hand2", font=police_font, command=login_button_clicked)
+
+# Utilisation de place pour placer les widgets de la page de connexion au centre
+username_label.place(relx=0.5, rely=0.3, anchor='center')
+username_entry.place(relx=0.5, rely=0.35, anchor='center')
+password_label.place(relx=0.5, rely=0.4, anchor='center')
+password_entry.place(relx=0.5, rely=0.45, anchor='center')
+toggle_button_password.place(relx=0.5, rely=0.5, anchor='center')
+create_account_button.place(relx=0.5, rely=0.6, anchor='center')
+login_button.place(relx=0.5, rely=0.55, anchor='center')
+
+# Création du label avec le lien
+link_label = tk.Label(root, text="Essayer le site Web ?", fg="blue", cursor="hand2", font=police_font)
+link_label.pack(side='bottom')
+link_label.bind("<Button-1>", open_webpage)
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+                                                                                # Création du tableau de bord
+# Création des widgets du tableau de bord
+welcome_label = tk.Label(root, text="Bienvenue dans le tableau de bord !")
+entry_button = tk.Button(root, text="Ajouter une entrée", cursor="hand2", command=save_entry)
+logout_button = tk.Button(root, text="Déconnexion", cursor="hand2", command=logout)
+export_button = tk.Button(root, text="Exporter les données", cursor="hand2", command=export_to_csv)
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+# Boucle principale de la fenêtre
+root.mainloop()
