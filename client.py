@@ -88,14 +88,6 @@ def toggle_password_connection():
         password_entry.config(show='') 
         toggle_button_password.config(text='Cacher le mot de passe', cursor="hand2")
 
-def toggle_password_entry(entry_password_entry):
-    if entry_password_entry.cget('show') == '':
-        entry_password_entry.config(show='*') 
-        toggle_button_password.config(text='Afficher le mot de passe', cursor="hand2")
-    else:
-        entry_password_entry.config(show='') 
-        toggle_button_password.config(text='Cacher le mot de passe', cursor="hand2")
-
 def show_dashboard():
     username_label.place_forget() 
     username_entry.place_forget() 
@@ -106,12 +98,18 @@ def show_dashboard():
     login_button.place_forget() 
     
     welcome_label.pack()
-    entry_button.pack()
     logout_button.pack(side="top", anchor="ne")
     export_button.pack(side="top", anchor="ne")
     logout_button.place(relx=1, rely=0, anchor="ne")
     export_button.place(relx=0.99, rely=0, x=-logout_button.winfo_reqwidth(), anchor="ne")
 
+    entry_name_label.pack()
+    entry_name_entry.pack()
+    entry_login_label.pack()
+    entry_login_entry.pack()
+    entry_password_label.pack()
+    entry_password_entry.pack()
+    save_button.pack()
 
 def logout():
     global entry_labels
@@ -148,10 +146,16 @@ def logout():
     
     welcome_label.pack_forget() 
     logout_button.pack_forget()
-    entry_button.pack_forget()
     export_button.pack_forget()
     logout_button.place_forget()
     export_button.place_forget()
+    entry_name_label.pack_forget()
+    entry_name_entry.pack_forget()
+    entry_login_label.pack_forget()
+    entry_login_entry.pack_forget()
+    entry_password_label.pack_forget()
+    entry_password_entry.pack_forget()
+    save_button.pack_forget()
 
 def get_entries():
     server_url = "https://monsite.local/api/get_entries" 
@@ -240,6 +244,9 @@ def show_entries():
 
             entry_frame.pack(anchor='center')
 
+            separator = tk.Frame(frame, height=2, bg="grey")
+            separator.pack(fill='x', pady=(0,10))
+
             entry_labels.append(entry_frame)
 
         frame.update_idletasks()
@@ -247,31 +254,7 @@ def show_entries():
     else:
         messagebox.showinfo("Information", "Aucune entrée disponible.")
 
-def save_entry():
-    entry_window = tk.Toplevel(root)
-    entry_window.title("Nouvelle Entrée")
-
-    entry_name_label = tk.Label(entry_window, text="Nom de l'entrée")
-    entry_name_entry = tk.Entry(entry_window)
-    entry_login_label = tk.Label(entry_window, text="Nom d'utilisateur")
-    entry_login_entry = tk.Entry(entry_window)
-    entry_password_label = tk.Label(entry_window, text="Mot de passe")
-    entry_password_entry = tk.Entry(entry_window, show='*')
-
-    toggle_button_password = tk.Button(entry_window, text='Afficher le mot de passe', width=20, cursor="hand2", command=lambda: toggle_password_entry(entry_password_entry))
-
-    save_button = tk.Button(entry_window, text="Enregistrer", width=20,cursor="hand2", command=lambda: save_entry_details(entry_name_entry.get(), entry_login_entry.get(), entry_password_entry.get(), entry_window))
-
-    entry_name_label.grid(row=0, column=0, padx=10, pady=5)
-    entry_name_entry.grid(row=0, column=1, padx=10, pady=5)
-    entry_login_label.grid(row=1, column=0, padx=10, pady=5)
-    entry_login_entry.grid(row=1, column=1, padx=10, pady=5)
-    entry_password_label.grid(row=2, column=0, padx=10, pady=5)
-    entry_password_entry.grid(row=2, column=1, padx=10, pady=5)
-    toggle_button_password.grid(row=3, column=0, columnspan=2, pady=10)
-    save_button.grid(row=4, column=0, columnspan=2, pady=10)
-
-def save_entry_details(entry_name, entry_login, entry_password, entry_window):
+def save_entry_details(entry_name, entry_login, entry_password):
     if not entry_name or not entry_login or not entry_password:
         messagebox.showerror("Erreur", "Veuillez remplir tous les champs de l'entrée.")
         return
@@ -285,8 +268,6 @@ def save_entry_details(entry_name, entry_login, entry_password, entry_window):
         
         if response.status_code == 200: 
             messagebox.showinfo("Succès", "Entrée enregistrée avec succès !")
-            
-            entry_window.destroy()
 
             for entry_label in entry_labels:
                 entry_label.destroy()
@@ -322,7 +303,7 @@ def make_delete_entry_func(entry_id, entry_frame):
 
 def export_to_csv():
     entries = get_entries()
-    filename = filedialog.asksaveasfilename(defaultextension='.csv')
+    filename = filedialog.asksaveasfilename(defaultextension='.csv', initialfile='password.csv')
 
     if not filename:
         return
@@ -365,8 +346,15 @@ link_label.pack(side='bottom')
 link_label.bind("<Button-1>", open_webpage)
 
 welcome_label = tk.Label(root, text="Bienvenue dans le tableau de bord !")
-entry_button = tk.Button(root, text="Ajouter une entrée", cursor="hand2", command=save_entry)
 logout_button = tk.Button(root, text="Déconnexion", cursor="hand2", command=logout)
 export_button = tk.Button(root, text="Exporter les données", cursor="hand2", command=export_to_csv)
+
+entry_name_label = tk.Label(root, text="Nom")
+entry_name_entry = tk.Entry(root)
+entry_login_label = tk.Label(root, text="Login")
+entry_login_entry = tk.Entry(root)
+entry_password_label = tk.Label(root, text="Mot de passe")
+entry_password_entry = tk.Entry(root, show='*')
+save_button = tk.Button(root, text="Enregistrer l'entrée", cursor="hand2", command=lambda: save_entry_details(entry_name_entry.get(), entry_login_entry.get(), entry_password_entry.get()))
 
 root.mainloop()
