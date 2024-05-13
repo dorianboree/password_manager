@@ -9,11 +9,24 @@ from cryptography.fernet import Fernet
 
 app = Flask(__name__) 
 bcrypt = Bcrypt(app) 
-app.secret_key = 'your_secret_key' 
 static_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static') 
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///passwords.db'
 db = SQLAlchemy(app) 
+
+def flask_secret_key():
+    secret_key = os.urandom(24)
+    with open("flask_secret_key", "wb") as key_file:
+        key_file.write(secret_key)
+
+def load_flask_secret_key():
+    if not os.path.exists("flask_secret_key"):
+        flask_secret_key()
+    with open("flask_secret_key", "rb") as key_file:
+        secret_key = key_file.read()
+    return secret_key
+
+app.secret_key = load_flask_secret_key()
 
 class User(db.Model): 
     id = db.Column(db.Integer, primary_key=True) 
@@ -30,17 +43,16 @@ class User(db.Model):
     def check_password(self, password): 
         return bcrypt.check_password_hash(self.password, password)
 
-def load_or_generate_key():
-    key_file_path = "secret.key"
+def encryption_key():
+    key = Fernet.generate_key()
+    with open("encryption_key", "wb") as key_file:
+        key_file.write(key)
 
-    if os.path.exists(key_file_path):
-        with open(key_file_path, "rb") as key_file:
-            key = key_file.read()
-    else:
-        key = Fernet.generate_key()
-        with open(key_file_path, "wb") as key_file:
-            key_file.write(key)
-    
+def load_encryption_key():
+    if not os.path.exists("encryption_key"):
+        encryption_key()
+    with open("encryption_key", "rb") as key_file:
+        key = key_file.read()
     return key
 
 class Entry(db.Model): 
@@ -57,13 +69,13 @@ class Entry(db.Model):
         self.user_id = user_id
 
     def encrypt_data(self, data):
-        key = load_or_generate_key()
+        key = load_encryption_key()
         cipher_suite = Fernet(key)
         ciphered_text = cipher_suite.encrypt(data.encode())
         return ciphered_text.decode()
 
     def decrypt_data(self, data):
-        key = load_or_generate_key()
+        key = load_encryption_key()
         cipher_suite = Fernet(key)
         unciphered_text = (cipher_suite.decrypt(data.encode()))
         return unciphered_text.decode()
