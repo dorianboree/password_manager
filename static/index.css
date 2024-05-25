@@ -47,7 +47,7 @@ button {
     background-color: #051c2c;
     color: #fff;
     border: none;
-    border-radius: 10px; /* Coins arrondis */
+    border-radius: 10px;
     cursor: pointer;
     border: 1px solid transparent;
 }
@@ -80,7 +80,7 @@ button:first-of-type {
 .footer {
     position: fixed;
     left: 0;
-    bottom: 10px; /* Ajustez cette valeur selon vos besoins */
+    bottom: 10px;
     width: 100%;
     text-align: center;
 }
