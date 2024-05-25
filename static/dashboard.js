@@ -24,7 +24,7 @@ document.getElementById('searchField').addEventListener('input', function(e) {
 });
 
 function getEntries() {
-    fetch('/api/get_entries', { method: 'GET' })
+    fetch('https://onepass.com/api/get_entries', { method: 'GET' })
         .then(response => response.json())
         .then(handleEntries)
 }
@@ -160,7 +160,7 @@ function saveEntry() {
         clearErrorMessage('entryPassword');
     }
 
-    fetch('/api/save_entry', {
+    fetch('https://onepass.com/api/save_entry', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -200,7 +200,7 @@ function clearErrorMessage(fieldId) {
 }
 
 function deleteEntry(entryId) {
-    fetch(`/api/delete_entry/${entryId}`, {
+    fetch(`https://onepass.com/api/delete_entry/${entryId}`, {
         method: 'DELETE',
     })
         .then(response => response.json())
@@ -213,7 +213,7 @@ function deleteEntry(entryId) {
 }
 
 function logout() {
-    fetch('/api/logout', {
+    fetch('https://onepass.com/api/logout', {
         method: 'POST',
     })
     .then(response => response.json())
