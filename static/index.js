@@ -70,7 +70,7 @@ function createAccount(event) {
         return;
     }
 
-    performRequest('/api/create_account', 'POST', { username, password }, 'Compte créé avec succès !', 'Une erreur s\'est produite lors de la création du compte.');
+    performRequest('https://onepass.com/api/create_account', 'POST', { username, password }, 'Compte créé avec succès !', 'Une erreur s\'est produite lors de la création du compte.');
 }
 
 function login(event) {
@@ -89,5 +89,5 @@ function login(event) {
         return;
     }
 
-    performRequest('/api/login', 'POST', { username, password }, 'Connexion réussie !', 'Une erreur s\'est produite lors de la connexion.', '/static/dashboard.html');
+    performRequest('https://onepass.com/api/login', 'POST', { username, password }, 'Connexion réussie !', 'Une erreur s\'est produite lors de la connexion.', '/static/dashboard.html');
 }
