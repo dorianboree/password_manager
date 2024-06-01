@@ -181,13 +181,16 @@ def save_entry():
     user_id = session.get('user_id') 
 
     if user_id is None: 
-        return jsonify({'message': 'Utilisateur non connecté.'}), 401 
-
-    new_entry = Entry(name=entry_name, login=entry_login, password=entry_password, user_id=user_id) 
-    db.session.add(new_entry) 
-    db.session.commit()
-
-    return jsonify({'message': 'Entrée enregistrée avec succès !'}) 
+        return jsonify({'message': 'Utilisateur non connecté.'}), 401  
+    
+    try:
+        new_entry = Entry(name=entry_name, login=entry_login, password=entry_password, user_id=user_id) 
+        db.session.add(new_entry)
+        db.session.commit()
+        return jsonify({'message': 'Entrée enregistrée avec succès !'}) 
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'message': 'Erreur lors de l\'enregistrement de l\'entrée. Veuillez réessayer.'}), 500
 
 @app.route('/api/get_entries', methods=['GET'])
 def get_entries():
@@ -196,23 +199,27 @@ def get_entries():
     if user_id is None:
         return jsonify({'entries': []}) 
 
-    entries = Entry.query.filter_by(user_id=user_id).all() 
+    entries = Entry.query.filter_by(user_id=user_id).all()
     entries_list = [{'id': entry.id, 'name': entry.decrypt_data(entry.name), 'login': entry.decrypt_data(entry.login), 'password': entry.decrypt_data(entry.password)} for entry in entries] 
-    return jsonify({'entries': entries_list}) 
+    return jsonify({'entries': entries_list})
 
 @app.route('/api/delete_entry/<int:entry_id>', methods=['DELETE'])
 def delete_entry(entry_id):
-    user_id = session.get('user_id') 
+    user_id = session.get('user_id')
 
-    if user_id is None: 
-        return jsonify({'message': 'Utilisateur non connecté.'}), 401 
+    if user_id is None:
+        return jsonify({'message': 'Utilisateur non connecté.'}), 401
 
-    entry = Entry.query.filter_by(id=entry_id, user_id=user_id).first() 
+    entry = Entry.query.filter_by(id=entry_id, user_id=user_id).first()
 
     if entry: 
-        db.session.delete(entry) 
-        db.session.commit() 
-        return jsonify({'message': 'Entrée supprimée avec succès !'})
+        try:
+            db.session.delete(entry)
+            db.session.commit()
+            return jsonify({'message': 'Entrée supprimée avec succès !'})
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({'message': 'Erreur lors de la suppression de l\'entrée. Veuillez réessayer.'}), 500
     else:
         return jsonify({'message': 'Entrée non trouvée ou non autorisée.'}), 404
 
