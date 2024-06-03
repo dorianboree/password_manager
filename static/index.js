@@ -257,11 +257,6 @@ function generateRandomPassword() {
     return password;
 }
 
-function getRandomChar(characters) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    return characters.charAt(randomIndex);
-}
-
 function generateAndDisplayPasswords() {
     const passwordList = document.getElementById('passwordList');
     passwordList.innerHTML = '';
