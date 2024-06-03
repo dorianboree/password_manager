@@ -319,9 +319,6 @@ function exportData() {
     const downloadLink = document.createElement('a');
     downloadLink.download = 'password.csv';
     downloadLink.href = window.URL.createObjectURL(csvFile);
-    downloadLink.style.display = 'none';
 
-    document.body.appendChild(downloadLink);
     downloadLink.click();
-    document.body.removeChild(downloadLink);
 }
