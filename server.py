@@ -225,8 +225,3 @@ def delete_entry(entry_id):
 
 if __name__ == '__main__':
     app.run(host='192.168.1.97', port=5000, debug=True)
-
-@app.route('/login')
-def login():
-    return send_from_directory(static_directory, 'login.html')
-
