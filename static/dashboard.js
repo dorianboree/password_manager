@@ -40,49 +40,6 @@ function handleEntries(data) {
     });
 }
 
-function createEntryListItem(entry) {
-    const entryItem = document.createElement('li');
-    entryItem.className = 'entry-item';
-    entryItem.style.display = 'flex';
-    entryItem.style.alignItems = 'center';
-
-    const nameField = createNameField(entry.name);
-    nameField.style.marginRight = '30px';
-    const loginField = createLoginField(entry.login);
-    const passwordField = createPasswordField(entry.password);
-
-    const toggleButton = createToggleButton(passwordField);
-    const copyLoginButton = createCopyButton(loginField, 'Copier Login');
-    copyLoginButton.style.marginRight = '30px';
-    const copyPasswordButton = createCopyButton(passwordField, 'Copier Mot de passe');
-
-    const nameText = document.createElement('strong');
-    nameText.appendChild(document.createTextNode('Nom'));
-    entryItem.appendChild(nameText);
-    entryItem.appendChild(document.createTextNode('\u00A0'));
-    entryItem.appendChild(nameField);
-
-    const loginText = document.createElement('strong');
-    loginText.appendChild(document.createTextNode('Login'));
-    entryItem.appendChild(loginText);
-    entryItem.appendChild(document.createTextNode('\u00A0'));
-    entryItem.appendChild(loginField);
-    entryItem.appendChild(copyLoginButton);
-
-    const passwordText = document.createElement('strong');
-    passwordText.appendChild(document.createTextNode('Mot de passe'));
-    entryItem.appendChild(passwordText);
-    entryItem.appendChild(document.createTextNode('\u00A0'));
-    entryItem.appendChild(passwordField);
-    entryItem.appendChild(toggleButton);
-    entryItem.appendChild(copyPasswordButton);
-
-    const deleteButton = createDeleteButton(entry.id);
-    entryItem.appendChild(deleteButton);
-
-    return entryItem;
-}
-
 function createNameField(name) {
     const nameField = document.createElement('input');
     nameField.type = 'text';
@@ -132,6 +89,67 @@ function createDeleteButton(entryId) {
     });
 
     return deleteButton;
+}
+
+function createCopyButton(textField) {
+    const copyButton = document.createElement('button');
+    copyButton.textContent = 'Copier';
+
+    copyButton.addEventListener('click', function () {
+        const fieldType = textField.type;
+
+        textField.type = 'text';
+
+        textField.select();
+        document.execCommand('copy');
+
+        textField.type = fieldType;
+    });
+
+    return copyButton;
+}
+
+function createEntryListItem(entry) {
+    const entryItem = document.createElement('li');
+    entryItem.className = 'entry-item';
+    entryItem.style.display = 'flex';
+    entryItem.style.alignItems = 'center';
+
+    const nameField = createNameField(entry.name);
+    nameField.style.marginRight = '30px';
+    const loginField = createLoginField(entry.login);
+    const passwordField = createPasswordField(entry.password);
+
+    const toggleButton = createToggleButton(passwordField);
+    const copyLoginButton = createCopyButton(loginField, 'Copier Login');
+    copyLoginButton.style.marginRight = '30px';
+    const copyPasswordButton = createCopyButton(passwordField, 'Copier Mot de passe');
+
+    const nameText = document.createElement('strong');
+    nameText.appendChild(document.createTextNode('Nom'));
+    entryItem.appendChild(nameText);
+    entryItem.appendChild(document.createTextNode('\u00A0'));
+    entryItem.appendChild(nameField);
+
+    const loginText = document.createElement('strong');
+    loginText.appendChild(document.createTextNode('Login'));
+    entryItem.appendChild(loginText);
+    entryItem.appendChild(document.createTextNode('\u00A0'));
+    entryItem.appendChild(loginField);
+    entryItem.appendChild(copyLoginButton);
+
+    const passwordText = document.createElement('strong');
+    passwordText.appendChild(document.createTextNode('Mot de passe'));
+    entryItem.appendChild(passwordText);
+    entryItem.appendChild(document.createTextNode('\u00A0'));
+    entryItem.appendChild(passwordField);
+    entryItem.appendChild(toggleButton);
+    entryItem.appendChild(copyPasswordButton);
+
+    const deleteButton = createDeleteButton(entry.id);
+    entryItem.appendChild(deleteButton);
+
+    return entryItem;
 }
 
 function saveEntry() {
@@ -203,13 +221,16 @@ function deleteEntry(entryId) {
     fetch(`https://onepass.com/api/delete_entry/${entryId}`, {
         method: 'DELETE',
     })
-        .then(response => response.json())
-        .then(data => {
-            const saveResultMessage = document.getElementById('saveResultMessage');
-            saveResultMessage.textContent = data.message;
-            getEntries();
-        })
-        .catch(error => console.error('Error deleting entry:', error));
+    .then(response => response.json())
+    .then(data => {
+        const saveResultMessage = document.getElementById('saveResultMessage');
+        saveResultMessage.textContent = data.message;
+        getEntries();
+    })
+    .catch(() => {
+        const saveResultMessage = document.getElementById('saveResultMessage');
+        saveResultMessage.textContent = 'Une erreur s\'est produite lors de la suppression de l\'entrée.';
+    });
 }
 
 function logout() {
@@ -221,8 +242,7 @@ function logout() {
         document.getElementById('saveResultMessage').innerText = data.message;
         window.location.href = '/';
     })
-    .catch(error => {
-        console.error('Error:', error);
+    .catch(() => {
         document.getElementById('saveResultMessage').innerText = 'Une erreur s\'est produite lors de la déconnexion.';
     });
 }
@@ -255,9 +275,13 @@ function generateRandomPassword() {
     return password;
 }
 
-function getRandomChar(characters) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    return characters.charAt(randomIndex);
+function createTextField(password) {
+    const textField = document.createElement('input');
+    textField.type = 'text';
+    textField.className = 'password-field';
+    textField.value = password;
+    textField.readOnly = true;
+    return textField;
 }
 
 function generateAndDisplayPasswords() {
@@ -278,33 +302,6 @@ function generateAndDisplayPasswords() {
     passwordList.appendChild(passwordItem);
 }
 
-function createTextField(password) {
-    const textField = document.createElement('input');
-    textField.type = 'text';
-    textField.className = 'password-field';
-    textField.value = password;
-    textField.readOnly = true;
-    return textField;
-}
-
-function createCopyButton(textField) {
-    const copyButton = document.createElement('button');
-    copyButton.textContent = 'Copier';
-
-    copyButton.addEventListener('click', function () {
-        const fieldType = textField.type;
-
-        textField.type = 'text';
-
-        textField.select();
-        document.execCommand('copy');
-
-        textField.type = fieldType;
-    });
-
-    return copyButton;
-}
-
 function exportData() {
     const entries = document.querySelectorAll('.entry-item');
 
@@ -322,9 +319,6 @@ function exportData() {
     const downloadLink = document.createElement('a');
     downloadLink.download = 'password.csv';
     downloadLink.href = window.URL.createObjectURL(csvFile);
-    downloadLink.style.display = 'none';
 
-    document.body.appendChild(downloadLink);
     downloadLink.click();
-    document.body.removeChild(downloadLink);
 }
