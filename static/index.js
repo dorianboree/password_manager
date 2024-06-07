@@ -1,6 +1,4 @@
 function performRequest(url, method, data, successMessage, errorMessage, redirectUrl) {
-    event.preventDefault();
-
     fetch(url, {
         method: method,
         headers: {
@@ -18,7 +16,9 @@ function performRequest(url, method, data, successMessage, errorMessage, redirec
             resultMessageElement.classList.add('success');
 
             if (redirectUrl) {
-                window.location.href = redirectUrl;
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 1000);
             }
         } else {
             resultMessageElement.classList.remove('success');
@@ -35,7 +35,7 @@ function performRequest(url, method, data, successMessage, errorMessage, redirec
 }
 
 function checkPassword(password) {
-    if (password.length < 8) {
+    if (password.length < 8 || password.length > 80) {
         return false;
     }
     if (!/\d/.test(password)) {
@@ -61,12 +61,16 @@ function createAccount(event) {
     const password = document.getElementById('password').value;
 
     if (username.length < 8 || username.length > 80) {
-        document.getElementById('resultMessage').innerText = 'Le nom d\'utilisateur doit comporter entre 8 et 100 caractères.';
+        document.getElementById('resultMessage').innerText = 'Le nom d\'utilisateur doit comporter entre 8 et 80 caractères.';
+        document.getElementById('resultMessage').classList.remove('success');
+        document.getElementById('resultMessage').classList.add('error');
         return;
     }
 
-    if (!checkPassword(password) || password.length > 80) {
-        document.getElementById('resultMessage').innerText = 'Le mot de passe doit comporter entre 8 et 100 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.';
+    if (!checkPassword(password)) {
+        document.getElementById('resultMessage').innerText = 'Le mot de passe doit comporter entre 8 et 80 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.';
+        document.getElementById('resultMessage').classList.remove('success');
+        document.getElementById('resultMessage').classList.add('error');
         return;
     }
 
@@ -80,14 +84,18 @@ function login(event) {
     const password = document.getElementById('password').value;
 
     if (username.length < 8 || username.length > 80) {
-        document.getElementById('resultMessage').innerText = 'Le nom d\'utilisateur doit comporter entre 8 et 100 caractères.';
+        document.getElementById('resultMessage').innerText = 'Le nom d\'utilisateur doit comporter entre 8 et 80 caractères.';
+        document.getElementById('resultMessage').classList.remove('success');
+        document.getElementById('resultMessage').classList.add('error');
         return;
     }
 
-    if (!checkPassword(password) || password.length > 80) {
-        document.getElementById('resultMessage').innerText = 'Le mot de passe doit comporter entre 8 et 100 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.';
+    if (!checkPassword(password)) {
+        document.getElementById('resultMessage').innerText = 'Le mot de passe doit comporter entre 8 et 80 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.';
+        document.getElementById('resultMessage').classList.remove('success');
+        document.getElementById('resultMessage').classList.add('error');
         return;
     }
 
-    performRequest('https://onepass.com/api/login', 'POST', { username, password }, 'Connexion réussie !', 'Une erreur s\'est produite lors de la connexion.', '/static/dashboard.html');
+    performRequest('https://onepass.com/api/login', 'POST', { username, password }, 'Connexion réussie !', 'Nom d\'utilisateur ou mot de passe incorrect.', '/static/dashboard.html');
 }
