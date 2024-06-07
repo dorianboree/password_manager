@@ -1,9 +1,9 @@
-// static/dashboard.js
+document.addEventListener('DOMContentLoaded', init);
 
-document.addEventListener('DOMContentLoaded', function () {
-    getEntries();
+function init() {
+    loadEntries();
     generateAndDisplayPasswords();
-});
+}
 
 document.getElementById('exportButton').addEventListener('click', exportData);
 
@@ -23,13 +23,16 @@ document.getElementById('searchField').addEventListener('input', function(e) {
     });
 });
 
-function getEntries() {
-    fetch('https://onepass.com/api/get_entries', { method: 'GET' })
-        .then(response => response.json())
-        .then(handleEntries)
+function loadEntries() {
+    fetchEntries().then(displayEntries);
 }
 
-function handleEntries(data) {
+function fetchEntries() {
+    return fetch('https://onepass.com/api/get_entries', { method: 'GET' })
+        .then(response => response.json());
+}
+
+function displayEntries(data) {
     const entries = data.entries;
     const entriesList = document.getElementById('entriesList');
     entriesList.innerHTML = '';
@@ -40,116 +43,97 @@ function handleEntries(data) {
     });
 }
 
-function createNameField(name) {
-    const nameField = document.createElement('input');
-    nameField.type = 'text';
-    nameField.className = 'name-field';
-    nameField.value = name;
-    nameField.readOnly = true;
-    return nameField;
-}
-
-function createLoginField(login) {
-    const loginField = document.createElement('input');
-    loginField.type = 'text';
-    loginField.className = 'login-field';
-    loginField.value = login;
-    loginField.readOnly = true;
-    return loginField;
-}
-
-function createPasswordField(password) {
-    const passwordField = document.createElement('input');
-    passwordField.type = 'password';
-    passwordField.className = 'password-field';
-    passwordField.value = password;
-    passwordField.readOnly = true;
-    return passwordField;
-}
-
-function createToggleButton(passwordField) {
-    const toggleButton = document.createElement('button');
-    toggleButton.textContent = 'Afficher/Masquer Mot de passe';
-    toggleButton.addEventListener('click', function () {
-        passwordField.type = (passwordField.type === 'password') ? 'text' : 'password';
-    });
-    return toggleButton;
-}
-
-function createDeleteButton(entryId) {
-    const deleteButton = document.createElement('button');
-    deleteButton.textContent = 'Supprimer';
-
-    deleteButton.addEventListener('click', function () {
-        const confirmed = confirm('Voulez-vous vraiment supprimer cette entrée?');
-
-        if (confirmed) {
-            deleteEntry(entryId);
-        }
-    });
-
-    return deleteButton;
-}
-
-function createCopyButton(textField) {
-    const copyButton = document.createElement('button');
-    copyButton.textContent = 'Copier';
-
-    copyButton.addEventListener('click', function () {
-        const fieldType = textField.type;
-
-        textField.type = 'text';
-
-        textField.select();
-        document.execCommand('copy');
-
-        textField.type = fieldType;
-    });
-
-    return copyButton;
-}
-
 function createEntryListItem(entry) {
     const entryItem = document.createElement('li');
     entryItem.className = 'entry-item';
     entryItem.style.display = 'flex';
     entryItem.style.alignItems = 'center';
 
-    const nameField = createNameField(entry.name);
+    const nameField = createInputField('name-field', entry.name, true);
     nameField.style.marginRight = '30px';
-    const loginField = createLoginField(entry.login);
-    const passwordField = createPasswordField(entry.password);
+    const loginField = createInputField('login-field', entry.login, true);
+    const passwordField = createInputField('password-field', entry.password, true, 'password');
 
-    const toggleButton = createToggleButton(passwordField);
-    const copyLoginButton = createCopyButton(loginField, 'Copier Login');
+    const toggleButton = createButton('Afficher/Masquer Mot de passe', () => togglePasswordVisibility(passwordField));
+    const copyLoginButton = createButton('Copier', () => copyToClipboard(loginField));
     copyLoginButton.style.marginRight = '30px';
-    const copyPasswordButton = createCopyButton(passwordField, 'Copier Mot de passe');
+    const copyPasswordButton = createButton('Copier', () => copyToClipboard(passwordField));
+    const deleteButton = createButton('Supprimer', () => confirmAndDeleteEntry(entry.id));
 
-    const nameText = document.createElement('strong');
-    nameText.appendChild(document.createTextNode('Nom'));
-    entryItem.appendChild(nameText);
-    entryItem.appendChild(document.createTextNode('\u00A0'));
-    entryItem.appendChild(nameField);
-
-    const loginText = document.createElement('strong');
-    loginText.appendChild(document.createTextNode('Login'));
-    entryItem.appendChild(loginText);
-    entryItem.appendChild(document.createTextNode('\u00A0'));
-    entryItem.appendChild(loginField);
-    entryItem.appendChild(copyLoginButton);
-
-    const passwordText = document.createElement('strong');
-    passwordText.appendChild(document.createTextNode('Mot de passe'));
-    entryItem.appendChild(passwordText);
-    entryItem.appendChild(document.createTextNode('\u00A0'));
-    entryItem.appendChild(passwordField);
-    entryItem.appendChild(toggleButton);
-    entryItem.appendChild(copyPasswordButton);
-
-    const deleteButton = createDeleteButton(entry.id);
-    entryItem.appendChild(deleteButton);
+    appendChildren(entryItem, [
+        createLabel('Nom'), createSpace(), nameField,
+        createLabel('Login'), createSpace(), loginField, copyLoginButton,
+        createLabel('Mot de passe'), createSpace(), passwordField, toggleButton, copyPasswordButton,
+        deleteButton
+    ]);
 
     return entryItem;
+}
+
+function createSpace() {
+    const space = document.createElement('span');
+    space.textContent = '\u00A0';
+    return space;
+}
+
+function createInputField(className, value, readOnly, type = 'text') {
+    const field = document.createElement('input');
+    field.type = type;
+    field.className = className;
+    field.value = value;
+    field.readOnly = readOnly;
+    return field;
+}
+
+function createButton(text, onClick) {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.addEventListener('click', onClick);
+    return button;
+}
+
+function createLabel(text) {
+    const label = document.createElement('strong');
+    label.appendChild(document.createTextNode(text));
+    return label;
+}
+
+function appendChildren(parent, children) {
+    children.forEach(child => parent.appendChild(child));
+}
+
+function togglePasswordVisibility(passwordField) {
+    passwordField.type = passwordField.type === 'password' ? 'text' : 'password';
+}
+
+function copyToClipboard(field) {
+    if (field.type === 'password') {
+        field.type = 'text';
+        field.select();
+        document.execCommand('copy');
+        field.type = 'password';
+    } else {
+        field.select();
+        document.execCommand('copy');
+    }
+}
+
+function confirmAndDeleteEntry(entryId) {
+    if (confirm('Voulez-vous vraiment supprimer cette entrée ?')) {
+        deleteEntry(entryId);
+    }
+}
+
+function deleteEntry(entryId) {
+    fetch(`https://onepass.com/api/delete_entry/${entryId}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('saveResultMessage').textContent = data.message;
+            loadEntries();
+        })
+        .catch(() => {
+            document.getElementById('saveResultMessage').textContent = 'Une erreur s\'est produite lors de la suppression de l\'entrée.';
+        });
 }
 
 function saveEntry() {
@@ -157,57 +141,59 @@ function saveEntry() {
     const entryLogin = document.getElementById('entryLogin').value;
     const entryPassword = document.getElementById('entryPassword').value;
 
+    if (!validateEntryFields(entryName, entryLogin, entryPassword)) {
+        return;
+    }
+
+    fetch('https://onepass.com/api/save_entry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryName, entryLogin, entryPassword }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('saveResultMessage').innerText = data.message;
+        loadEntries();
+    });
+}
+
+function validateEntryFields(entryName, entryLogin, entryPassword) {
+    let isValid = true;
+
     if (entryName.length === 0 || entryName.length > 100) {
         displayErrorMessage('entryName', 'Le champ "Nom" doit être rempli et ne peut pas dépasser 100 caractères.');
-        return;
+        isValid = false;
     } else {
         clearErrorMessage('entryName');
     }
 
     if (entryLogin.length === 0 || entryLogin.length > 100) {
         displayErrorMessage('entryLogin', 'Le champ "Login" doit être rempli et ne peut pas dépasser 100 caractères.');
-        return;
+        isValid = false;
     } else {
         clearErrorMessage('entryLogin');
     }
 
     if (entryPassword.length === 0 || entryPassword.length > 100) {
         displayErrorMessage('entryPassword', 'Le champ "Mot de passe" doit être rempli et ne peut pas dépasser 100 caractères.');
-        return;
+        isValid = false;
     } else {
         clearErrorMessage('entryPassword');
     }
 
-    fetch('https://onepass.com/api/save_entry', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ entryName, entryLogin, entryPassword }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('saveResultMessage').innerText = data.message;
-
-        getEntries();
-    });
+    return isValid;
 }
 
 function displayErrorMessage(fieldId, errorMessage) {
-    const errorContainer = document.getElementById(`${fieldId}Error`);
-    if (errorContainer) {
-        errorContainer.innerText = errorMessage;
-    } else {
-        const errorSpan = document.createElement('span');
-        errorSpan.id = `${fieldId}Error`;
-        errorSpan.className = 'error-message';
-        errorSpan.innerText = errorMessage;
-
+    let errorContainer = document.getElementById(`${fieldId}Error`);
+    if (!errorContainer) {
+        errorContainer = document.createElement('span');
+        errorContainer.id = `${fieldId}Error`;
+        errorContainer.className = 'error-message';
         const field = document.getElementById(fieldId);
-        if (field) {
-            field.parentNode.insertBefore(errorSpan, field.nextSibling);
-        }
+        field.parentNode.insertBefore(errorContainer, field.nextSibling);
     }
+    errorContainer.innerText = errorMessage;
 }
 
 function clearErrorMessage(fieldId) {
@@ -217,26 +203,8 @@ function clearErrorMessage(fieldId) {
     }
 }
 
-function deleteEntry(entryId) {
-    fetch(`https://onepass.com/api/delete_entry/${entryId}`, {
-        method: 'DELETE',
-    })
-    .then(response => response.json())
-    .then(data => {
-        const saveResultMessage = document.getElementById('saveResultMessage');
-        saveResultMessage.textContent = data.message;
-        getEntries();
-    })
-    .catch(() => {
-        const saveResultMessage = document.getElementById('saveResultMessage');
-        saveResultMessage.textContent = 'Une erreur s\'est produite lors de la suppression de l\'entrée.';
-    });
-}
-
 function logout() {
-    fetch('https://onepass.com/api/logout', {
-        method: 'POST',
-    })
+    fetch('https://onepass.com/api/logout', { method: 'POST' })
     .then(response => response.json())
     .then(data => {
         document.getElementById('saveResultMessage').innerText = data.message;
@@ -247,8 +215,23 @@ function logout() {
     });
 }
 
+function generateAndDisplayPasswords() {
+    const passwordList = document.getElementById('passwordList');
+    passwordList.innerHTML = '';
+
+    const randomPassword = generateRandomPassword();
+    const passwordField = createInputField('password-field', randomPassword, true);
+
+    const copyButton = createButton('Copier', () => copyToClipboard(passwordField));
+
+    const passwordItem = document.createElement('li');
+    appendChildren(passwordItem, [passwordField, copyButton]);
+
+    passwordList.appendChild(passwordItem);
+}
+
 function generateRandomPassword() {
-    const length = document.getElementById('passwordLength').value;
+    const length = parseInt(document.getElementById('passwordLength').value);
     const useLowercase = document.getElementById('useLowercase').checked;
     const useUppercase = document.getElementById('useUppercase').checked;
     const useNumbers = document.getElementById('useNumbers').checked;
@@ -266,40 +249,11 @@ function generateRandomPassword() {
     if (useSpecialChars) allChars += specialChars;
 
     let password = "";
-
     for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * allChars.length);
-        password += allChars.charAt(randomIndex);
+        password += allChars.charAt(Math.floor(Math.random() * allChars.length));
     }
 
     return password;
-}
-
-function createTextField(password) {
-    const textField = document.createElement('input');
-    textField.type = 'text';
-    textField.className = 'password-field';
-    textField.value = password;
-    textField.readOnly = true;
-    return textField;
-}
-
-function generateAndDisplayPasswords() {
-    const passwordList = document.getElementById('passwordList');
-    passwordList.innerHTML = '';
-
-    const randomPassword = generateRandomPassword();
-
-    const passwordItem = document.createElement('li');
-
-    const passwordField = createTextField(randomPassword);
-
-    const copyButton = createCopyButton(passwordField);
-
-    passwordItem.appendChild(passwordField);
-    passwordItem.appendChild(copyButton);
-
-    passwordList.appendChild(passwordItem);
 }
 
 function exportData() {
