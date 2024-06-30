@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>ESGI Pass</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+    <!-- Contenneur pour le formulaire de connexion -->
+    <div id="login-container">
+        <form id="loginForm">
+            <h1>Se connecter</h1>
+            <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" required />
+            <input type="password" id="loginPassword" placeholder="Mot de passe" required />
+            <button type="submit">Se connecter</button>
+            <p id="loginMessage" style="color: red;"></p>
+            <p>Pas de compte ? <a href="#" id="showSignUp">Créer un compte</a></p>
+            <p><a href="#" id="goToDashboardFromLogin">Accéder au dashboard</a></p>
+        </form>
+    </div>
+    
+    <!-- Contenneur pour le formulaire d'inscription -->
+    <div id="signup-container" style="display: none;">
+        <form id="signUpForm">
+            <h1>Créer un compte</h1>
+            <input type="text" id="signUpUsername" placeholder="Nom d'utilisateur" required />
+            <input type="password" id="signUpPassword" placeholder="Mot de passe" required />
+            <button type="submit">Créer un compte</button>
+            <p id="signUpMessage" style="color: red;"></p>
+            <p>Déjà un compte ? <a href="#" id="showLogin">Se connecter</a></p>
+            <p><a href="#" id="goToDashboardFromSignUp">Accéder au dashboard</a></p>
+        </form>
+    </div>
+
+    <!-- Contenneur pour le tableau de bord -->
+    <div id="dashboard-container" style="display: none;">
+        <!-- Ici le contenu de la page dashboard -->
+        <!-- Ensuite : rajouter les fichiers JS pour la logique de l'application -->
+    </div>
+
+    <script src="popup.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>
