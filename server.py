@@ -32,7 +32,7 @@ app.secret_key = load_flask_secret_key()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    username = db.Column(db.String(30), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
 
     def __init__(self, username, password):
@@ -59,9 +59,9 @@ def load_encryption_key():
 
 class Entry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    login = db.Column(db.String(100), nullable=False)
-    password = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(30), nullable=False)
+    login = db.Column(db.String(30), nullable=False)
+    password = db.Column(db.String(80), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     def __init__(self, name, login, password, user_id):
@@ -90,7 +90,7 @@ def index():
     return send_from_directory(static_directory, 'index.html')
 
 def check_password(password):
-    if len(password) < 8:
+    if len(password) < 8 or len(password) > 80:
         return False
     if not any(char.isdigit() for char in password):
         return False
@@ -100,6 +100,14 @@ def check_password(password):
         return False
     special_characters = "!@#$%^&*()-+?_=,<>/"
     if not any(char in special_characters for char in password):
+        return False
+    return True
+
+def check_username(username):
+    if len(username) < 8 or len(username) > 30:
+        return False 
+    special_characters = "!@#$%^&*()-+?_=,<>/ÀàÂâÉéÈèÊêËëÎîÏïÔôŒœÙùÛûÜüÇç"
+    if any(char in special_characters for char in username):
         return False
     return True
 
@@ -120,14 +128,14 @@ def create_account():
     if user: 
         return jsonify({'message': 'Ce nom d\'utilisateur existe déjà. Veuillez en choisir un autre.'}), 400 
 
-    if len(username) < 8:
-        return jsonify({'message': 'Le nom d\'utilisateur doit comporter au moins 8 caractères.'}), 400
+    if not check_username(username):
+        return jsonify({'message': 'Le nom d\'utilisateur doit comporter entre 8 et 30 caractères et ne doit pas contenir de caractères spéciaux ou de lettre avec accent.'}), 400
 
     if not password:
         return jsonify({'message': 'Veuillez entrer un mot de passe.'}), 400
 
     if not check_password(password):
-        return jsonify({'message': 'Le mot de passe doit comporter au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.'}), 400
+        return jsonify({'message': 'Le mot de passe doit comporter entre 8 et 80 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.'}), 400
 
     try:
         new_user = User(username=username, password=password)
@@ -152,7 +160,7 @@ def login():
             user = u
             break
 
-    if user and user.check_password(password):
+    if user and user.check_username(username) and user.check_password(password):
         session['user_id'] = user.id
         return jsonify({'message': 'Connexion réussie !'})
     else:
@@ -174,6 +182,15 @@ def save_entry():
     entry_login = data.get('entryLogin')
     entry_password = data.get('entryPassword')
 
+    if not entry_name or not entry_login or not entry_password:
+        return jsonify({'message': 'Les champs Nom, Login et Mot de passe ne doivent pas être vides.'}), 400
+    if len(entry_name) > 30 :
+        return jsonify({'message': 'Le champ Nom ne doit pas dépasser 30 caractères.'}), 400
+    if len(entry_login) > 30 :
+        return jsonify({'message': 'Le champ Login ne doit pas dépasser 30 caractères.'}), 400
+    if len(entry_password) > 80:
+        return jsonify({'message': 'Le champ Mot de passe ne doit pas dépasser 80 caractères.'}), 400
+
     user_id = session.get('user_id')
 
     if user_id is None:
@@ -187,6 +204,7 @@ def save_entry():
     except IntegrityError:
         db.session.rollback()
         return jsonify({'message': 'Erreur lors de l\'enregistrement de l\'entrée. Veuillez réessayer.'}), 500
+
 
 @app.route('/api/get_entries', methods=['GET'])
 def get_entries():
