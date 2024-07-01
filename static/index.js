@@ -54,14 +54,25 @@ function checkPassword(password) {
     return true;
 }
 
+function checkUsername(username) {
+    if (username.length < 8 || username.length > 30) {
+        return false;
+    }
+    var specialCharacters = "!@#$%^&*()-+?_=,<>/ÀàÂâÉéÈèÊêËëÎîÏïÔôŒœÙùÛûÜüÇç";
+    if (new RegExp('[' + specialCharacters + ']').test(username)) {
+        return false;
+    }
+    return true;
+}
+
 function createAccount(event) {
     event.preventDefault();
 
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    if (username.length < 8 || username.length > 80) {
-        document.getElementById('resultMessage').innerText = 'Le nom d\'utilisateur doit comporter entre 8 et 80 caractères.';
+    if (!checkUsername(username)) {
+        document.getElementById('resultMessage').innerText = 'Le nom d\'utilisateur doit comporter entre 8 et 30 caractères et ne doit pas contenir de caractères spéciaux ou de lettre avec accent.';
         document.getElementById('resultMessage').classList.remove('success');
         document.getElementById('resultMessage').classList.add('error');
         return;
@@ -83,8 +94,8 @@ function login(event) {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    if (username.length < 8 || username.length > 80) {
-        document.getElementById('resultMessage').innerText = 'Le nom d\'utilisateur doit comporter entre 8 et 80 caractères.';
+    if (!checkUsername(username)) {
+        document.getElementById('resultMessage').innerText = 'Le nom d\'utilisateur doit comporter entre 8 et 30 caractères et ne doit pas contenir de caractères spéciaux.';
         document.getElementById('resultMessage').classList.remove('success');
         document.getElementById('resultMessage').classList.add('error');
         return;
