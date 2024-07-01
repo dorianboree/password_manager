@@ -10,10 +10,10 @@ import csv
 session = requests.Session()
 
 def open_webpage(event):
-    webbrowser.open('https://monsite.local/')
+    webbrowser.open('https://onepass.com/')
 
 def check_password(password):
-    if len(password) < 8:
+    if len(password) < 8 or len(password) > 80:
         return False
     if not any(char.isdigit() for char in password):
         return False
@@ -26,15 +26,23 @@ def check_password(password):
         return False
     return True
 
+def check_username(username):
+    if len(username) < 8 or len(username) > 30:
+        return False 
+    special_characters = "!@#$%^&*()-+?_=,<>/ÀàÂâÉéÈèÊêËëÎîÏïÔôŒœÙùÛûÜüÇç"
+    if any(char in special_characters for char in username):
+        return False
+    return True
+
 def create_account(username, password):
-    if len(username) < 8:
-        messagebox.showerror("Erreur", "Le nom d'utilisateur doit contenir au moins 8 caractères.")
+    if not check_username(username):
+        messagebox.showerror("Erreur", "Le nom d\'utilisateur doit comporter entre 8 et 30 caractères et ne doit pas contenir de caractères spéciaux ou de lettre avec accent.")
         return
     if not check_password(password):
-        messagebox.showerror("Erreur", "Le mot de passe doit contenir au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.")
+        messagebox.showerror("Erreur", "Le mot de passe doit comporter entre 8 et 80 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.")
         return
 
-    server_url = "https://monsite.local/api/create_account"
+    server_url = "https://onepass.com/api/create_account"
     
     data = {'username': username, 'password': password} 
     
@@ -55,14 +63,14 @@ def create_account_button_clicked():
     create_account(username_entry.get(), password_entry.get())
 
 def login(username, password):
-    if len(username) < 8:
-        messagebox.showerror("Erreur", "Le nom d'utilisateur doit contenir au moins 8 caractères.")
+    if not check_username(username):
+        messagebox.showerror("Erreur", "Le nom d\'utilisateur doit comporter entre 8 et 30 caractères et ne doit pas contenir de caractères spéciaux ou de lettre avec accent.")
         return
     if not check_password(password):
-        messagebox.showerror("Erreur", "Le mot de passe doit contenir au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.")
+        messagebox.showerror("Erreur", "Le mot de passe doit comporter entre 8 et 80 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.")
         return
     
-    server_url = "https://monsite.local/api/login" 
+    server_url = "https://onepass.com/api/login" 
     
     data = {'username': username, 'password': password} 
     
@@ -73,7 +81,7 @@ def login(username, password):
             show_dashboard()
             show_entries() 
         else:
-            messagebox.showerror("Erreur", "Échec de la connexion !")
+            messagebox.showerror("Erreur", "Échec de la connexion ! Compte inexistant ou mot de passe incorrect.")
     except Exception as e:
         messagebox.showerror("Erreur", f"Erreur de connexion : {str(e)}") 
 
@@ -115,7 +123,7 @@ def logout():
     global entry_labels
     global scrolling_frame 
 
-    server_url = "https://monsite.local/api/logout" 
+    server_url = "https://onepass.com/api/logout" 
     
     try:
         response = session.post(server_url, verify=False)
@@ -127,7 +135,10 @@ def logout():
         messagebox.showerror("Erreur", f"Erreur de communication avec le serveur : {str(e)}") 
 
     username_entry.delete(0, tk.END) 
-    password_entry.delete(0, tk.END) 
+    password_entry.delete(0, tk.END)
+    entry_name_entry.delete(0, tk.END) 
+    entry_login_entry.delete(0, tk.END) 
+    entry_password_entry.delete(0, tk.END) 
 
     for label in entry_labels:
         label.destroy()
@@ -158,7 +169,7 @@ def logout():
     save_button.pack_forget()
 
 def get_entries():
-    server_url = "https://monsite.local/api/get_entries" 
+    server_url = "https://onepass.com/api/get_entries" 
 
     try:
         response = session.get(server_url, verify=False) 
@@ -259,7 +270,19 @@ def save_entry_details(entry_name, entry_login, entry_password):
         messagebox.showerror("Erreur", "Veuillez remplir tous les champs de l'entrée.")
         return
 
-    server_url = "https://monsite.local/api/save_entry"
+    if len(entry_name) > 30 :
+        messagebox.showerror("Erreur", "Le nom d'entrée doit contenir moins de 30 caractères.")
+        return
+    
+    if len(entry_login) > 30 :
+        messagebox.showerror("Erreur", "Le login d'entrée doit contenir moins de 30 caractères.")
+        return
+
+    if len(entry_password) > 80:
+        messagebox.showerror("Erreur", "Le mot de passe doit contenir moins de 80 caractères.")
+        return
+
+    server_url = "https://onepass.com/api/save_entry"
 
     data = {'entryName': entry_name, 'entryLogin': entry_login, 'entryPassword': entry_password}
     
@@ -280,11 +303,11 @@ def save_entry_details(entry_name, entry_login, entry_password):
         else:
             messagebox.showerror("Erreur", "Échec de l'enregistrement de l'entrée !")
     except Exception as e:
-        messagebox.showerror("Erreur", f"Erreur de communication avec le serveur : {str(e)}") 
+        messagebox.showerror("Erreur", f"Erreur de communication avec le serveur : {str(e)}")
 
 def make_delete_entry_func(entry_id, entry_frame):
     def delete_entry():
-        server_url = f"https://monsite.local/api/delete_entry/{entry_id}"
+        server_url = f"https://onepass.com/api/delete_entry/{entry_id}"
         
         if messagebox.askokcancel("Confirmation", "Êtes-vous sûr de vouloir supprimer cette entrée ?"):
             try:
@@ -319,7 +342,7 @@ def export_to_csv():
     messagebox.showinfo("Succès", "Les entrées ont été exportées avec succès dans le fichier '{}'.".format(filename))
 
 root = tk.Tk()
-root.title("Gestionnaire de mot de passe en ligne")
+root.title("OnePass")
 
 root.state('zoomed')
 
