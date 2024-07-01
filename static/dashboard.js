@@ -160,22 +160,22 @@ function saveEntry() {
 function validateEntryFields(entryName, entryLogin, entryPassword) {
     let isValid = true;
 
-    if (entryName.length === 0 || entryName.length > 100) {
-        displayErrorMessage('entryName', 'Le champ "Nom" doit être rempli et ne peut pas dépasser 100 caractères.');
+    if (entryName.length === 0 || entryName.length > 30) {
+        displayErrorMessage('entryName', 'Le champ "Nom" doit être rempli et ne peut pas dépasser 30 caractères.');
         isValid = false;
     } else {
         clearErrorMessage('entryName');
     }
 
-    if (entryLogin.length === 0 || entryLogin.length > 100) {
-        displayErrorMessage('entryLogin', 'Le champ "Login" doit être rempli et ne peut pas dépasser 100 caractères.');
+    if (entryLogin.length === 0 || entryLogin.length > 30) {
+        displayErrorMessage('entryLogin', 'Le champ "Login" doit être rempli et ne peut pas dépasser 30 caractères.');
         isValid = false;
     } else {
         clearErrorMessage('entryLogin');
     }
 
-    if (entryPassword.length === 0 || entryPassword.length > 100) {
-        displayErrorMessage('entryPassword', 'Le champ "Mot de passe" doit être rempli et ne peut pas dépasser 100 caractères.');
+    if (entryPassword.length === 0 || entryPassword.length > 80) {
+        displayErrorMessage('entryPassword', 'Le champ "Mot de passe" doit être rempli et ne peut pas dépasser 80 caractères.');
         isValid = false;
     } else {
         clearErrorMessage('entryPassword');
