@@ -4,8 +4,6 @@ import requests
 import pyperclip
 import webbrowser
 import csv
-import random
-import string
 
 session = requests.Session()
 
@@ -36,7 +34,7 @@ def check_username(username):
 
 def create_account(username, password):
     if not check_username(username):
-        messagebox.showerror("Erreur", "Le nom d'utilisateur doit comporter entre 8 et 30 caractères et ne doit pas contenir de caractères spéciaux ou de lettre avec accent.")
+        messagebox.showerror("Erreur", "Le nom d\'utilisateur doit comporter entre 8 et 30 caractères et ne doit pas contenir de caractères spéciaux ou de lettre avec accent.")
         return
     if not check_password(password):
         messagebox.showerror("Erreur", "Le mot de passe doit comporter entre 8 et 80 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.")
@@ -64,7 +62,7 @@ def create_account_button_clicked():
 
 def login(username, password):
     if not check_username(username):
-        messagebox.showerror("Erreur", "Le nom d'utilisateur doit comporter entre 8 et 30 caractères et ne doit pas contenir de caractères spéciaux ou de lettre avec accent.")
+        messagebox.showerror("Erreur", "Le nom d\'utilisateur doit comporter entre 8 et 30 caractères et ne doit pas contenir de caractères spéciaux ou de lettre avec accent.")
         return
     if not check_password(password):
         messagebox.showerror("Erreur", "Le mot de passe doit comporter entre 8 et 80 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.")
@@ -119,26 +117,9 @@ def show_dashboard():
     entry_password_entry.pack()
     save_button.pack()
 
-    # Ajout des widgets pour la génération de mot de passe
-    length_label.pack()
-    length_entry.pack()
-    include_uppercase_check.pack()
-    include_lowercase_check.pack()
-    include_digits_check.pack()
-    include_special_check.pack()
-    show_password_check.pack()
-    toggle_button_generated_password.pack()
-    password_gen_button.pack()
-    password_gen_entry.pack()
-
-    search_label.pack()
-    search_entry.pack()
-    search_button.pack()
-
-    show_entries()
-
 def logout():
-    global entry_labels, scrolling_frame 
+    global entry_labels
+    global scrolling_frame 
 
     server_url = "https://onepass.com/api/logout" 
     
@@ -164,14 +145,26 @@ def logout():
     if scrolling_frame is not None:
         scrolling_frame.destroy()
 
-    for widget in [username_label, username_entry, password_label, password_entry, toggle_button_password, create_account_button, login_button]:
-        widget.place(relx=0.5, rely=0.3 + 0.05 * list([username_label, username_entry, password_label, password_entry, toggle_button_password, create_account_button, login_button]).index(widget), anchor='center')
-
-    for widget in [welcome_label, logout_button, export_button, entry_name_label, entry_name_entry, entry_login_label, entry_login_entry, entry_password_label, entry_password_entry, save_button, length_label, length_entry, include_uppercase_check, include_lowercase_check, include_digits_check, include_special_check, show_password_check, toggle_button_generated_password, password_gen_button, password_gen_entry, search_label, search_entry, search_button, password_entry]:
-        widget.pack_forget()
-
-    export_button.place_forget()
+    username_label.place(relx=0.5, rely=0.3, anchor='center')
+    username_entry.place(relx=0.5, rely=0.35, anchor='center')
+    password_label.place(relx=0.5, rely=0.4, anchor='center')
+    password_entry.place(relx=0.5, rely=0.45, anchor='center')
+    toggle_button_password.place(relx=0.5, rely=0.5, anchor='center')
+    create_account_button.place(relx=0.5, rely=0.6, anchor='center')
+    login_button.place(relx=0.5, rely=0.55, anchor='center')
+    
+    welcome_label.pack_forget() 
+    logout_button.pack_forget()
+    export_button.pack_forget()
     logout_button.place_forget()
+    export_button.place_forget()
+    entry_name_label.pack_forget()
+    entry_name_entry.pack_forget()
+    entry_login_label.pack_forget()
+    entry_login_entry.pack_forget()
+    entry_password_label.pack_forget()
+    entry_password_entry.pack_forget()
+    save_button.pack_forget()
 
 def get_entries():
     server_url = "https://onepass.com/api/get_entries" 
@@ -206,208 +199,183 @@ scrolling_frame = None
 
 def show_entries():
     global entry_labels, scrolling_frame
-
-    if scrolling_frame is not None:
-        scrolling_frame.destroy()
-
     entries_data = get_entries()
-    scrolling_frame = tk.Frame(root)
-    scrolling_frame.pack(fill='both', expand=True)
+    entry_font = font.Font(family='Helvetica', size=10, weight='bold')
 
-    canvas = tk.Canvas(scrolling_frame)
-    canvas.pack(side='left', fill='both', expand=True)
+    if entries_data:
+        scrolling_frame = tk.Frame(root)
+        scrolling_frame.pack(side='bottom')
 
-    scrollbar = tk.Scrollbar(scrolling_frame, orient='vertical', command=canvas.yview)
-    scrollbar.pack(side='right', fill='y')
+        canvas = tk.Canvas(scrolling_frame, width=1100, height=600)
+        scrollbar = tk.Scrollbar(scrolling_frame, command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
 
-    canvas.configure(yscrollcommand=scrollbar.set)
-    frame = tk.Frame(canvas)
-    canvas.create_window((0, 0), window=frame, anchor='nw')
+        canvas.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
 
-    frame.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+        frame = tk.Frame(canvas)
+        canvas.create_window((0, 0), window=frame, anchor='n')
 
-    entry_labels = []
+        for entry in entries_data:
+            entry_frame = tk.Frame(frame)
+            entry_frame.pack(fill='x', pady=10)
 
-    for entry_data in entries_data:
-        entry_name = entry_data.get('entry_name', '')
-        entry_login = entry_data.get('entry_login', '')
-        entry_password = entry_data.get('entry_password', '')
+            name_label = tk.Label(entry_frame, text="Nom", font=entry_font)
+            name_label.pack(side='left', padx=(20, 0))
+            name_var = tk.StringVar(value=entry['name'])
+            name_entry = tk.Entry(entry_frame, textvariable=name_var, state='readonly')
+            name_entry.pack(side='left')
 
-        entry_frame = tk.Frame(frame)
-        entry_frame.pack(fill='x', padx=10, pady=5)
+            login_label = tk.Label(entry_frame, text="Login", font=entry_font)
+            login_label.pack(side='left', padx=(20, 0))
+            login_var = tk.StringVar(value=entry['login'])
+            login_entry = tk.Entry(entry_frame, textvariable=login_var, state='readonly')
+            login_entry.pack(side='left')
 
-        entry_name_label = tk.Label(entry_frame, text=f'Nom de l\'entrée : {entry_name}', font=font.Font(weight="bold"))
-        entry_name_label.pack(side='top', anchor='w')
+            copy_login_button = tk.Button(entry_frame, text="Copier le login", cursor="hand2", command=make_copy_command(entry['login']))
+            copy_login_button.pack(side='left')
 
-        entry_login_label = tk.Label(entry_frame, text=f'Login : {entry_login}')
-        entry_login_label.pack(side='left')
-        copy_button_login = tk.Button(entry_frame, text='Copier le login', command=make_copy_command(entry_login), cursor="hand2")
-        copy_button_login.pack(side='left', padx=10)
+            password_label = tk.Label(entry_frame, text="Mot de passe", font=entry_font)
+            password_label.pack(side='left', padx=(20, 0))
+            password_var = tk.StringVar(value=entry['password'])
+            password_entry = tk.Entry(entry_frame, textvariable=password_var, state='readonly', show='*')
+            password_entry.pack(side='left')
 
-        entry_password_entry = tk.Entry(entry_frame, show='*', width=30)
-        entry_password_entry.insert(0, entry_password)
-        entry_password_entry.pack(side='left')
-        copy_button_password = tk.Button(entry_frame, text='Copier le mot de passe', command=make_copy_command(entry_password), cursor="hand2")
-        copy_button_password.pack(side='left', padx=10)
+            toggle_entry_password_button = tk.Button(entry_frame, text='Afficher le mot de passe')
+            toggle_entry_password_button.config(cursor="hand2", command=make_toggle_password_func(password_entry, toggle_entry_password_button))
+            toggle_entry_password_button.pack(side='left')
 
-        toggle_button = tk.Button(entry_frame, text='Afficher le mot de passe', command=make_toggle_password_func(entry_password_entry, toggle_button_password), cursor="hand2")
-        toggle_button.pack(side='left', padx=10)
+            copy_password_button = tk.Button(entry_frame, text="Copier le mot de passe", cursor="hand2", command=make_copy_command(entry['password']))
+            copy_password_button.pack(side='left')
 
-        entry_labels.append(entry_frame)
+            delete_entry_button = tk.Button(entry_frame, text='Supprimer l\'entrée', cursor="hand2", command=make_delete_entry_func(entry['id'], entry_frame))
+            delete_entry_button.pack(side='left')
 
-def generate_password():
+            entry_frame.pack(anchor='center')
+
+            separator = tk.Frame(frame, height=2, bg="grey")
+            separator.pack(fill='x', pady=(0,10))
+
+            entry_labels.append(entry_frame)
+
+        frame.update_idletasks()
+        canvas.config(scrollregion=canvas.bbox('all'))
+    else:
+        messagebox.showinfo("Information", "Aucune entrée disponible.")
+
+def save_entry_details(entry_name, entry_login, entry_password):
+    if not entry_name or not entry_login or not entry_password:
+        messagebox.showerror("Erreur", "Veuillez remplir tous les champs de l'entrée.")
+        return
+
+    if len(entry_name) > 30 :
+        messagebox.showerror("Erreur", "Le nom d'entrée doit contenir moins de 30 caractères.")
+        return
+    
+    if len(entry_login) > 30 :
+        messagebox.showerror("Erreur", "Le login d'entrée doit contenir moins de 30 caractères.")
+        return
+
+    if len(entry_password) > 80:
+        messagebox.showerror("Erreur", "Le mot de passe doit contenir moins de 80 caractères.")
+        return
+
+    server_url = "https://onepass.com/api/save_entry"
+
+    data = {'entryName': entry_name, 'entryLogin': entry_login, 'entryPassword': entry_password}
+    
     try:
-        length = int(length_entry.get())
-    except ValueError:
-        messagebox.showerror("Erreur", "Veuillez entrer une longueur valide.")
+        response = session.post(server_url, json=data, verify=False) 
+        
+        if response.status_code == 200: 
+            messagebox.showinfo("Succès", "Entrée enregistrée avec succès !")
+
+            for entry_label in entry_labels:
+                entry_label.destroy()
+            entry_labels.clear()
+
+            if scrolling_frame is not None: 
+                scrolling_frame.destroy()
+
+            show_entries() 
+        else:
+            messagebox.showerror("Erreur", "Échec de l'enregistrement de l'entrée !")
+    except Exception as e:
+        messagebox.showerror("Erreur", f"Erreur de communication avec le serveur : {str(e)}")
+
+def make_delete_entry_func(entry_id, entry_frame):
+    def delete_entry():
+        server_url = f"https://onepass.com/api/delete_entry/{entry_id}"
+        
+        if messagebox.askokcancel("Confirmation", "Êtes-vous sûr de vouloir supprimer cette entrée ?"):
+            try:
+                response = session.delete(server_url, verify=False) 
+
+                if response.status_code == 200: 
+                    messagebox.showinfo("Succès", "Entrée supprimée avec succès !") 
+
+                    entry_frame.destroy()
+                else:
+                    messagebox.showerror("Erreur", "Échec de la suppression de l'entrée !")
+            except Exception as e:
+                messagebox.showerror("Erreur", f"Erreur de communication avec le serveur : {str(e)}")
+
+    return delete_entry
+
+def export_to_csv():
+    entries = get_entries()
+    filename = filedialog.asksaveasfilename(defaultextension='.csv', initialfile='password.csv')
+
+    if not filename:
         return
 
-    if length < 8 or length > 80:
-        messagebox.showerror("Erreur", "La longueur du mot de passe doit être entre 8 et 80.")
-        return
+    with open(filename, 'w', newline='') as csvfile:
+        fieldnames = entries[0].keys()
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-    characters = ""
-    if include_uppercase_var.get():
-        characters += string.ascii_uppercase
-    if include_lowercase_var.get():
-        characters += string.ascii_lowercase
-    if include_digits_var.get():
-        characters += string.digits
-    if include_special_var.get():
-        characters += "!@#$%^&*()-+?_=,<>/"
+        writer.writeheader()
+        for entry in entries:
+            writer.writerow(entry)
 
-    if not characters:
-        messagebox.showerror("Erreur", "Veuillez sélectionner au moins un type de caractère.")
-        return
+    messagebox.showinfo("Succès", "Les entrées ont été exportées avec succès dans le fichier '{}'.".format(filename))
 
-    password = ''.join(random.choice(characters) for i in range(length))
-    password_gen_entry.delete(0, tk.END)
-    password_gen_entry.insert(0, password)
-
-    if not show_password_var.get():
-        password_gen_entry.config(show='*')
-    else:
-        password_gen_entry.config(show='')
-
-def toggle_generated_password():
-    if password_gen_entry.cget('show') == '':
-        password_gen_entry.config(show='*')
-        toggle_button_generated_password.config(text='Afficher le mot de passe')
-    else:
-        password_gen_entry.config(show='')
-        toggle_button_generated_password.config(text='Cacher le mot de passe')
-
-# Widgets for main window
 root = tk.Tk()
 root.title("OnePass")
+
 root.state('zoomed')
 
-title_label = tk.Label(root, text="OnePass", font=("Helvetica", 24, "bold"))
-title_label.pack()
+police_font = font.Font(family='Helvetica', size=15, weight='bold')
 
-username_label = tk.Label(root, text="Nom d'utilisateur")
+username_label = tk.Label(root, text="Nom d'utilisateur", font=police_font)
+username_entry = tk.Entry(root, font=police_font)
+password_label = tk.Label(root, text="Mot de passe", font=police_font)
+password_entry = tk.Entry(root, show='*', width=20, font=police_font)
+toggle_button_password = tk.Button(root, text='Afficher le mot de passe', width=20, cursor="hand2", font=police_font, command=toggle_password_connection)
+create_account_button = tk.Button(root, text="Créer un compte", width=20, cursor="hand2", font=police_font, command=create_account_button_clicked)
+login_button = tk.Button(root, text="Connexion", width=20, cursor="hand2", font=police_font, command=login_button_clicked)
+
 username_label.place(relx=0.5, rely=0.3, anchor='center')
-username_entry = tk.Entry(root)
 username_entry.place(relx=0.5, rely=0.35, anchor='center')
-
-password_label = tk.Label(root, text="Mot de passe")
 password_label.place(relx=0.5, rely=0.4, anchor='center')
-password_entry = tk.Entry(root, show='*')
 password_entry.place(relx=0.5, rely=0.45, anchor='center')
-
-toggle_button_password = tk.Button(root, text='Afficher le mot de passe', command=toggle_password_connection, cursor="hand2")
 toggle_button_password.place(relx=0.5, rely=0.5, anchor='center')
+create_account_button.place(relx=0.5, rely=0.6, anchor='center')
+login_button.place(relx=0.5, rely=0.55, anchor='center')
 
-create_account_button = tk.Button(root, text="Créer un compte", command=create_account_button_clicked, cursor="hand2")
-create_account_button.place(relx=0.5, rely=0.55, anchor='center')
+link_label = tk.Label(root, text="Essayer le site Web ?", fg="blue", cursor="hand2", font=police_font)
+link_label.pack(side='bottom')
+link_label.bind("<Button-1>", open_webpage)
 
-login_button = tk.Button(root, text="Se connecter", command=login_button_clicked, cursor="hand2")
-login_button.place(relx=0.5, rely=0.6, anchor='center')
+welcome_label = tk.Label(root, text="Bienvenue dans le tableau de bord !")
+logout_button = tk.Button(root, text="Déconnexion", cursor="hand2", command=logout)
+export_button = tk.Button(root, text="Exporter les données", cursor="hand2", command=export_to_csv)
 
-welcome_label = tk.Label(root, text="Bienvenue sur le tableau de bord", font=("Helvetica", 18, "bold"))
-logout_button = tk.Button(root, text="Se déconnecter", command=logout, cursor="hand2")
-export_button = tk.Button(root, text="Exporter", command=lambda: export_to_csv(get_entries()), cursor="hand2")
-
-entry_name_label = tk.Label(root, text="Nom de l'entrée")
+entry_name_label = tk.Label(root, text="Nom")
 entry_name_entry = tk.Entry(root)
-
 entry_login_label = tk.Label(root, text="Login")
 entry_login_entry = tk.Entry(root)
-
 entry_password_label = tk.Label(root, text="Mot de passe")
 entry_password_entry = tk.Entry(root, show='*')
+save_button = tk.Button(root, text="Enregistrer l'entrée", cursor="hand2", command=lambda: save_entry_details(entry_name_entry.get(), entry_login_entry.get(), entry_password_entry.get()))
 
-save_button = tk.Button(root, text="Enregistrer", command=lambda: save_entry(entry_name_entry.get(), entry_login_entry.get(), entry_password_entry.get()), cursor="hand2")
-
-# Password generation customization
-length_label = tk.Label(root, text="Longueur du mot de passe")
-length_entry = tk.Entry(root)
-length_entry.insert(0, "12")
-
-include_uppercase_var = tk.BooleanVar(value=True)
-include_lowercase_var = tk.BooleanVar(value=True)
-include_digits_var = tk.BooleanVar(value=True)
-include_special_var = tk.BooleanVar(value=True)
-show_password_var = tk.BooleanVar(value=False)
-
-include_uppercase_check = tk.Checkbutton(root, text="Inclure des majuscules", variable=include_uppercase_var)
-include_lowercase_check = tk.Checkbutton(root, text="Inclure des minuscules", variable=include_lowercase_var)
-include_digits_check = tk.Checkbutton(root, text="Inclure des chiffres", variable=include_digits_var)
-include_special_check = tk.Checkbutton(root, text="Inclure des caractères spéciaux", variable=include_special_var)
-show_password_check = tk.Checkbutton(root, text="Afficher le mot de passe", variable=show_password_var, command=toggle_generated_password)
-
-toggle_button_generated_password = tk.Button(root, text='Cacher le mot de passe', command=toggle_generated_password, cursor="hand2")
-password_gen_button = tk.Button(root, text="Générer le mot de passe", command=generate_password, cursor="hand2")
-password_gen_entry = tk.Entry(root)
-
-search_label = tk.Label(root, text="Rechercher")
-search_entry = tk.Entry(root)
-search_button = tk.Button(root, text="Rechercher", command=lambda: search_entries(search_entry.get()), cursor="hand2")
-
-# Functions for password generation
-
-# Functions for password generation
-def generate_password():
-    try:
-        length = int(length_entry.get())
-    except ValueError:
-        messagebox.showerror("Erreur", "Veuillez entrer une longueur valide.")
-        return
-
-    if length < 8 or length > 80:
-        messagebox.showerror("Erreur", "La longueur du mot de passe doit être entre 8 et 80.")
-        return
-
-    characters = ""
-    if include_uppercase_var.get():
-        characters += string.ascii_uppercase
-    if include_lowercase_var.get():
-        characters += string.ascii_lowercase
-    if include_digits_var.get():
-        characters += string.digits
-    if include_special_var.get():
-        characters += "!@#$%^&*()-+?_=,<>/"
-
-    if not characters:
-        messagebox.showerror("Erreur", "Veuillez sélectionner au moins un type de caractère.")
-        return
-
-    password = ''.join(random.choice(characters) for i in range(length))
-    password_gen_entry.delete(0, tk.END)
-    password_gen_entry.insert(0, password)
-
-    if not show_password_var.get():
-        password_gen_entry.config(show='*')
-    else:
-        password_gen_entry.config(show='')
-
-def toggle_generated_password():
-    if password_gen_entry.cget('show') == '':
-        password_gen_entry.config(show='*')
-        toggle_button_generated_password.config(text='Afficher le mot de passe')
-    else:
-        password_gen_entry.config(show='')
-        toggle_button_generated_password.config(text='Cacher le mot de passe')
-
-# Start the main loop
 root.mainloop()
